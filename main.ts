@@ -1,6 +1,6 @@
 import { SigningCosmWasmClient } from "npm:@cosmjs/cosmwasm-stargate";
 import { DirectSecp256k1HdWallet } from "npm:@cosmjs/proto-signing";
-import { calculateFee, GasPrice } from "npm:@cosmjs/stargate";
+import { GasPrice } from "npm:@cosmjs/stargate";
 import { toAscii } from "npm:@cosmjs/encoding";
 import { sleep } from "npm:@cosmjs/utils";
 import { ReadonlyDate } from "npm:readonly-date";
@@ -17,6 +17,10 @@ function diff(a: ReadonlyDate, b: ReadonlyDate): number {
   return (b.getTime() - a.getTime()) / 1000;
 }
 
+function timeAndDiff(now: ReadonlyDate, base: ReadonlyDate): string {
+  return `${now.toISOString()} (${diff(base, now).toFixed(1)}s)`;
+}
+
 if (import.meta.main) {
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
     prefix: "juno",
@@ -29,18 +33,20 @@ if (import.meta.main) {
     wallet,
     { gasPrice },
   );
-  console.log("Balance:", await client.getBalance(address, feeDenom));
+  const chainId = await client.getChainId();
+  console.log(`Chain info (${chainId})`);
+  console.log("    Balance:", await client.getBalance(address, feeDenom));
 
   const { prices } = await client.queryContractSmart(proxy, { "prices": {} });
-  console.log("Prices", prices);
-
+  console.log("    Prices", prices);
+  
+  console.log(`Request Beacon (${chainId})`);
   const jobId = `Ping ${Math.random()}`;
-
   const start = new Date(Date.now());
-  console.log("Start", start.toISOString());
+  console.log("    Started:", timeAndDiff(start, start));
 
   const funds = { amount: "100", denom: "ujunox" };
-  const gas = "auto"; // calculateFee(260_000, gasPrice);
+  const gas = 1.1; // calculateFee(260_000, gasPrice);
   const ok = await client.execute(
     address,
     dice,
@@ -52,13 +58,14 @@ if (import.meta.main) {
     [funds],
   );
   console.log(
-    `Height: ${ok.height}; Gas: ${ok.gasUsed}/${ok.gasWanted}; Tx: ${ok.transactionHash}`,
+    `    Height: ${ok.height}; Gas: ${ok.gasUsed}/${ok.gasWanted}; Tx: ${ok.transactionHash}`,
   );
   const inclusion = new Date(Date.now());
   console.log(
-    `Inclusion: ${inclusion.toISOString()} (${diff(start, inclusion).toFixed(1)}s)`,
+    `    Inclusion: ${timeAndDiff(inclusion, start)}`,
   );
 
+  console.log(`Deliver Beacon (${chainId})`);
   let first = true;
   while (true) {
     try {
@@ -69,7 +76,7 @@ if (import.meta.main) {
         break;
       } else {
         if (first) {
-          Deno.stdout.writeSync(toAscii("Waiting for beacon delivery "));
+          Deno.stdout.writeSync(toAscii("    Waiting for beacon delivery "));
           first = false;
         }
         Deno.stdout.writeSync(new Uint8Array([0x2e]));
@@ -80,8 +87,8 @@ if (import.meta.main) {
     await sleep(2000);
   }
   Deno.stdout.writeSync(new Uint8Array([0x0a]));
-  const resultFound = new Date(Date.now());
+  const callback = new Date(Date.now());
   console.log(
-    `Result found: ${resultFound.toISOString()} (${diff(start, resultFound).toFixed(1)}s)`,
+    `    Callback: ${timeAndDiff(callback, start)}`,
   );
 }
