@@ -5,6 +5,7 @@
     "specifiers": {
       "@cosmjs/cosmwasm-stargate": "@cosmjs/cosmwasm-stargate@0.29.5",
       "@cosmjs/encoding": "@cosmjs/encoding@0.29.5",
+      "@cosmjs/math": "@cosmjs/math@0.29.5",
       "@cosmjs/proto-signing": "@cosmjs/proto-signing@0.29.5",
       "@cosmjs/stargate": "@cosmjs/stargate@0.29.5",
       "@cosmjs/tendermint-rpc": "@cosmjs/tendermint-rpc@0.29.5",
