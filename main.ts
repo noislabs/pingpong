@@ -4,9 +4,16 @@ import { GasPrice } from "npm:@cosmjs/stargate";
 import { toAscii } from "npm:@cosmjs/encoding";
 import { sleep } from "npm:@cosmjs/utils";
 import { Decimal } from "npm:@cosmjs/math";
-import { ReadonlyDate } from "npm:readonly-date";
-import { GetJobDeliveryResponse, GetJobRequestResponse, monitoringContract } from "./monitoring.ts";
+import { Tendermint34Client } from "npm:@cosmjs/tendermint-rpc";
+import {
+  GetJobDeliveryResponse,
+  GetJobRequestResponse,
+  JobLifecycleDelivery,
+  monitoringContract,
+} from "./monitoring.ts";
 import { roundAfter, timeOfRound } from "./drand.ts";
+import { lastNBlocks } from "./congestion.ts";
+import { Timer } from "./timer.ts";
 
 const endpoint = "https://juno-testnet-rpc.polkachu.com/";
 const proxy = "juno1v82su97skv6ucfqvuvswe0t5fph7pfsrtraxf0x33d8ylj5qnrysdvkc95";
@@ -20,19 +27,11 @@ function timestampToDate(ts: string): Date {
   return new Date(millis);
 }
 
-// in seconds
-function diff(a: ReadonlyDate, b: ReadonlyDate): number {
-  return (b.getTime() - a.getTime()) / 1000;
-}
-
-function timeAndDiff(now: ReadonlyDate, base: ReadonlyDate): string {
-  return `${now.toISOString()} (${diff(base, now).toFixed(1)}s)`;
-}
-
 if (import.meta.main) {
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, { prefix: addressPrefix });
   const address = (await wallet.getAccounts())[0].address;
-  console.log("Wallet address:", address);
+  console.log("Wallet");
+  console.log(`    Address: ${address}`);
 
   const client = await SigningCosmWasmClient.connectWithSigner(
     endpoint,
@@ -41,15 +40,15 @@ if (import.meta.main) {
   );
   const chainId = await client.getChainId();
   console.log(`Chain info (${chainId})`);
-  console.log("    Balance:", await client.getBalance(address, feeDenom));
+  const balance = await client.getBalance(address, feeDenom);
+  console.log(`    Balance: ${JSON.stringify(balance)}`);
 
   const { prices } = await client.queryContractSmart(proxy, { "prices": {} });
-  console.log("    Prices", prices);
+  console.log(`    Prices: ${JSON.stringify(prices)}`);
 
   console.log(`Request Beacon (${chainId})`);
   const jobId = `Ping ${Math.random()}`;
-  const start = new Date(Date.now());
-  console.log("    Started:", timeAndDiff(start, start));
+  const timer = Timer.start();
 
   const funds = { amount: "100", denom: "ujunox" };
   const gas = 1.1; // calculateFee(260_000, gasPrice);
@@ -64,9 +63,9 @@ if (import.meta.main) {
   console.log(
     `    Height: ${ok.height}; Gas: ${ok.gasUsed}/${ok.gasWanted}; Tx: ${ok.transactionHash}`,
   );
-  const inclusion = new Date(Date.now());
   console.log(
-    `    Inclusion: ${timeAndDiff(inclusion, start)}`,
+    `    Inclusion: %c${timer.time()}`,
+    "color: green",
   );
 
   let requestHeight = Number.NaN;
@@ -87,21 +86,33 @@ if (import.meta.main) {
     const round = roundAfter(a);
     const publishTime = timeOfRound(round);
     console.log(
-      `    After: ${timeAndDiff(a, start)}`,
+      `    After: ${a.toISOString()}`,
     );
+    console.log(`Drand publication (#${round})`);
     console.log(
-      `    Publish time: ${timeAndDiff(publishTime, start)}; Round: ${round}`,
+      `    Publish time: ${publishTime.toISOString()}; Round: ${round}`,
+    );
+    const waitForRound = publishTime.getTime() - Date.now();
+    console.log(
+      `    Sleeping until publish time is reached (${(waitForRound / 1000).toFixed(1)}s) ...`,
+    );
+    await sleep(waitForRound);
+    console.log(
+      `    Published: %c${timer.timeAt(publishTime)}`,
+      "color: green",
     );
   }
 
   console.log(`Deliver Beacon (${chainId})`);
   let first = true;
+  let lifecycle2: JobLifecycleDelivery;
   while (true) {
     try {
-      const response = await client.queryContractSmart(monitoringContract, {
-        "query_outcome": { "job_id": jobId },
+      const delivery: GetJobDeliveryResponse = await client.queryContractSmart(monitoringContract, {
+        "get_delivery": { "job_id": jobId },
       });
-      if (response) {
+      if (delivery) {
+        lifecycle2 = delivery;
         break;
       } else {
         if (first) {
@@ -113,25 +124,29 @@ if (import.meta.main) {
     } catch (err) {
       console.warn(err);
     }
-    await sleep(2000);
+    await sleep(1500);
   }
   Deno.stdout.writeSync(new Uint8Array([0x0a]));
-  const callback = new Date(Date.now());
   console.log(
-    `    Callback: ${timeAndDiff(callback, start)}`,
+    `    Delivery: %c${timer.time()}`,
+    "color: green",
   );
-  const lifecycle2: GetJobDeliveryResponse = await client.queryContractSmart(monitoringContract, {
-    "get_delivery": { "job_id": jobId },
-  });
-  if (!lifecycle2) console.warn("Missing get_job_lifecycle response");
-  else {
-    const { height, tx_index } = lifecycle2;
+
+  const { height, tx_index } = lifecycle2;
+  console.log(
+    `    Height: ${height}; Tx index: ${tx_index}`,
+  );
+  const heightDiff = height - requestHeight;
+  console.log(
+    `    Height diff: ${heightDiff}`,
+  );
+
+  console.log(`Network congestion (${chainId})`);
+  const tmClient = await Tendermint34Client.connect(endpoint);
+  const n = Math.min(4, heightDiff);
+  for (const [h, info] of await lastNBlocks(tmClient, height, n)) {
     console.log(
-      `    Height: ${height}; Tx index: ${tx_index}`,
-    );
-    const heightDiff = height - requestHeight;
-    console.log(
-      `    Height diff: ${heightDiff}`,
+      `    Block ${h}: ${info}`,
     );
   }
 }
