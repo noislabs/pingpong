@@ -12,7 +12,7 @@ import {
   monitoringContract,
 } from "./monitoring.ts";
 import { roundAfter, timeOfRound } from "./drand.ts";
-import { lastNBlocks } from "./congestion.ts";
+import { lastNBlocks, transactionHash } from "./blocks.ts";
 import { Timer } from "./timer.ts";
 
 const endpoint = "https://juno-testnet-rpc.polkachu.com/";
@@ -132,9 +132,12 @@ if (import.meta.main) {
     "color: green",
   );
 
+  const tmClient = await Tendermint34Client.connect(endpoint);
+
   const { height, tx_index } = lifecycle2;
+  const hash = tx_index ? await transactionHash(tmClient, height, tx_index) : null;
   console.log(
-    `    Height: ${height}; Tx index: ${tx_index}`,
+    `    Height: ${height}; Tx index: ${tx_index}; Tx: ${hash}`,
   );
   const heightDiff = height - requestHeight;
   console.log(
@@ -142,7 +145,6 @@ if (import.meta.main) {
   );
 
   console.log(`Network congestion (${chainId})`);
-  const tmClient = await Tendermint34Client.connect(endpoint);
   const n = Math.min(4, heightDiff);
   for (const [h, info] of await lastNBlocks(tmClient, height, n)) {
     console.log(

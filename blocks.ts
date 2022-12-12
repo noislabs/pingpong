@@ -1,4 +1,17 @@
+import { sha256 } from "npm:@cosmjs/crypto";
+import { toHex } from "npm:@cosmjs/encoding";
 import { Tendermint34Client } from "npm:@cosmjs/tendermint-rpc";
+
+export async function transactionHash(
+  client: Tendermint34Client,
+  height: number,
+  txIndex: number,
+): Promise<string> {
+  const block = await client.block(height);
+  const tx = block.block.txs[txIndex];
+  const hash = sha256(tx);
+  return toHex(hash).toUpperCase();
+}
 
 export async function lastNBlocks(
   client: Tendermint34Client,
