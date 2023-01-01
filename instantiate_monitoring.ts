@@ -16,7 +16,7 @@ if (import.meta.main) {
   );
 
   const wasm = Deno.readFileSync(wasmPath);
-  const upload = await client.upload(address, wasm, "auto");
+  const upload = await client.upload(address, wasm, 1.1);
   console.log("Upload:", upload);
 
   const res = await client.instantiate(
