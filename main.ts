@@ -18,6 +18,7 @@ import {
   GetJobDeliveryResponse,
   GetJobRequestResponse,
   JobLifecycleDelivery,
+  txQueryRound,
 } from "./monitoring.ts";
 import { roundAfter, timeOfRound } from "./drand.ts";
 import { lastNBlocks, transactionHash } from "./blocks.ts";
@@ -126,6 +127,13 @@ if (import.meta.main) {
     `    Verification: %c${timer.time()}`,
     "color: green",
   );
+  const verificationTxs = await noisClient.searchTx(txQueryRound(drandContract, round), undefined);
+  for (const tx of verificationTxs) {
+    // tx index missing (see https://github.com/cosmos/cosmjs/issues/1361)
+    console.log(
+      `    Height: ${tx.height}; Tx index: ${null}; Tx: ${tx.hash}`,
+    );
+  }
 
   console.log(`Deliver Beacon (${chainId})`);
   let lifecycle2: JobLifecycleDelivery;
