@@ -1,31 +1,36 @@
-import { SigningCosmWasmClient } from "npm:@cosmjs/cosmwasm-stargate";
+import { CosmWasmClient, SigningCosmWasmClient } from "npm:@cosmjs/cosmwasm-stargate";
 import { DirectSecp256k1HdWallet } from "npm:@cosmjs/proto-signing";
-import { GasPrice } from "npm:@cosmjs/stargate";
-import { toAscii } from "npm:@cosmjs/encoding";
 import { sleep } from "npm:@cosmjs/utils";
 import { Decimal } from "npm:@cosmjs/math";
 import { Tendermint34Client } from "npm:@cosmjs/tendermint-rpc";
 import {
+  addressPrefix,
+  drandContract,
+  endpoint,
+  feeDenom,
+  gasPrice,
+  mnemonic,
+  monitoringContract,
+  noisEndpoint,
+  proxyContract,
+} from "./env.ts";
+import {
   GetJobDeliveryResponse,
   GetJobRequestResponse,
   JobLifecycleDelivery,
-  monitoringContract,
 } from "./monitoring.ts";
 import { roundAfter, timeOfRound } from "./drand.ts";
 import { lastNBlocks, transactionHash } from "./blocks.ts";
 import { Timer } from "./timer.ts";
-
-const endpoint = "https://juno-testnet-rpc.polkachu.com/";
-const proxy = "juno1v82su97skv6ucfqvuvswe0t5fph7pfsrtraxf0x33d8ylj5qnrysdvkc95";
-const mnemonic = "exile another monster skin patient drink despair mule baby meadow pencil casino";
-const feeDenom = "ujunox";
-const addressPrefix = "juno";
-const gasPrice = GasPrice.fromString(`0.025${feeDenom}`);
+import { dot, nl, writeStdout } from "./console.ts";
 
 function timestampToDate(ts: string): Date {
   const millis = Decimal.fromAtomics(ts, 6).toFloatApproximation();
   return new Date(millis);
 }
+
+const pollTimeVerification = 350;
+const pollTimeDelivery = 1200;
 
 if (import.meta.main) {
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, { prefix: addressPrefix });
@@ -43,7 +48,7 @@ if (import.meta.main) {
   const balance = await client.getBalance(address, feeDenom);
   console.log(`    Balance: ${JSON.stringify(balance)}`);
 
-  const { prices } = await client.queryContractSmart(proxy, { "prices": {} });
+  const { prices } = await client.queryContractSmart(proxyContract, { "prices": {} });
   console.log(`    Prices: ${JSON.stringify(prices)}`);
 
   console.log(`Request Beacon (${chainId})`);
@@ -69,6 +74,7 @@ if (import.meta.main) {
   );
 
   let requestHeight = Number.NaN;
+  let round = Number.NaN;
   const lifecycle1: GetJobRequestResponse = await client.queryContractSmart(monitoringContract, {
     "get_request": { "job_id": jobId },
   });
@@ -83,12 +89,12 @@ if (import.meta.main) {
       `    Safety margin: ${(safety_margin / 1_000000000).toFixed(1)}s`,
     );
     const a = timestampToDate(after);
-    const round = roundAfter(a);
+    round = roundAfter(a);
     const publishTime = timeOfRound(round);
     console.log(
       `    After: ${a.toISOString()}`,
     );
-    console.log(`Drand publication (#${round})`);
+    console.log(`Drand publication (Round ${round})`);
     console.log(
       `    Publish time: ${publishTime.toISOString()}; Round: ${round}`,
     );
@@ -103,9 +109,27 @@ if (import.meta.main) {
     );
   }
 
+  console.log(`Beacon verification (Round ${round})`);
+  const noisClient = await CosmWasmClient.connect(noisEndpoint);
+
+  writeStdout("    Waiting for verification ");
+  while (true) {
+    const { beacon } = await noisClient.queryContractSmart(drandContract, {
+      "beacon": { round: round },
+    });
+    if (beacon) break;
+    else dot();
+    await sleep(pollTimeVerification);
+  }
+  nl();
+  console.log(
+    `    Verification: %c${timer.time()}`,
+    "color: green",
+  );
+
   console.log(`Deliver Beacon (${chainId})`);
-  let first = true;
   let lifecycle2: JobLifecycleDelivery;
+  writeStdout("    Waiting for beacon delivery ");
   while (true) {
     try {
       const delivery: GetJobDeliveryResponse = await client.queryContractSmart(monitoringContract, {
@@ -115,18 +139,14 @@ if (import.meta.main) {
         lifecycle2 = delivery;
         break;
       } else {
-        if (first) {
-          Deno.stdout.writeSync(toAscii("    Waiting for beacon delivery "));
-          first = false;
-        }
-        Deno.stdout.writeSync(new Uint8Array([0x2e]));
+        dot();
       }
     } catch (err) {
       console.warn(err);
     }
-    await sleep(1500);
+    await sleep(pollTimeDelivery);
   }
-  Deno.stdout.writeSync(new Uint8Array([0x0a]));
+  nl();
   console.log(
     `    Delivery: %c${timer.time()}`,
     "color: green",
