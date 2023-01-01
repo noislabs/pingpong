@@ -163,7 +163,9 @@ if (import.meta.main) {
   const tmClient = await Tendermint34Client.connect(endpoint);
 
   const { height, tx_index } = lifecycle2;
-  const hash = tx_index ? await transactionHash(tmClient, height, tx_index) : null;
+  const hash = typeof tx_index == "number"
+    ? await transactionHash(tmClient, height, tx_index)
+    : null;
   console.log(
     `    Height: ${height}; Tx index: ${tx_index}; Tx: ${hash}`,
   );
