@@ -1,6 +1,9 @@
 {
   "version": "2",
-  "remote": {},
+  "remote": {
+    "https://deno.land/std@0.171.0/_util/asserts.ts": "178dfc49a464aee693a7e285567b3d0b555dc805ff490505a8aae34f9cfb1462",
+    "https://deno.land/std@0.171.0/flags/mod.ts": "d1cdefa18472ef69858a17df5cf7c98445ed27ac10e1460183081303b0ebc270"
+  },
   "npm": {
     "specifiers": {
       "@cosmjs/cosmwasm-stargate": "@cosmjs/cosmwasm-stargate@0.29.5",
