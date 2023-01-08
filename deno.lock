@@ -14,6 +14,7 @@
       "@cosmjs/stargate": "@cosmjs/stargate@0.29.5",
       "@cosmjs/tendermint-rpc": "@cosmjs/tendermint-rpc@0.29.5",
       "@cosmjs/utils": "@cosmjs/utils@0.29.5",
+      "prom-client": "prom-client@14.1.1",
       "readonly-date": "readonly-date@1.0.0"
     },
     "packages": {
@@ -208,6 +209,10 @@
         "integrity": "sha512-s0IrSOzLlbvX7yp4WBfPITzpAU8sqQcpsmwXDiKwrG4r491vwCO/XpejasRNl0piBMe/DvP4Tz0mIS/X1DPJBQ==",
         "dependencies": {}
       },
+      "bintrees@1.0.2": {
+        "integrity": "sha512-VOMgTMwjAaUG580SXn3LacVgjurrbMme7ZZNYGSSV7mmtY6QQRh0Eg3pwIcntQ77DErK1L0NxkbetjcoXzVwKw==",
+        "dependencies": {}
+      },
       "bn.js@4.12.0": {
         "integrity": "sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==",
         "dependencies": {}
@@ -329,6 +334,10 @@
         "integrity": "sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==",
         "dependencies": {}
       },
+      "prom-client@14.1.1": {
+        "integrity": "sha512-hFU32q7UZQ59bVJQGUtm3I2PrJ3gWvoCkilX9sF165ks1qflhugVCeK+S1JjJYHvyt3o5kj68+q3bchormjnzw==",
+        "dependencies": { "tdigest": "tdigest@0.1.2" }
+      },
       "protobufjs@6.11.3": {
         "integrity": "sha512-xL96WDdCZYdU7Slin569tFX712BxsxslWwAfAhCYjQKGTq7dAU91Lomy6nLLhh/dyGhk/YH4TwTSRxTzhuHyZg==",
         "dependencies": {
@@ -354,6 +363,10 @@
       "symbol-observable@2.0.3": {
         "integrity": "sha512-sQV7phh2WCYAn81oAkakC5qjq2Ml0g8ozqz03wOGnx9dDlG1de6yrF+0RAzSJD8fPUow3PTSMf2SAbOGxb93BA==",
         "dependencies": {}
+      },
+      "tdigest@0.1.2": {
+        "integrity": "sha512-+G0LLgjjo9BZX2MfdvPfH+MKLCrxlXSYec5DaPYP1fe6Iyhf0/fSmJ0bFiZ1F8BT6cGXl2LpltQptzjXKWEkKA==",
+        "dependencies": { "bintrees": "bintrees@1.0.2" }
       },
       "ws@7.5.9": {
         "integrity": "sha512-F+P9Jil7UiSKSkppIiD94dN07AwvFixvLIj1Og1Rl9GGMuNipJnV9JzjD6XuqmAeiswGvUmNLjr5cFuXwNS77Q==",

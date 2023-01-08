@@ -23,4 +23,11 @@ export class Timer {
     const sign = sinceLast >= 0 ? "+" : "";
     return `${sinceBase.toFixed(1)}s (${sign}${sinceLast.toFixed(1)}s)`;
   }
+
+  /**
+   * Returns the time in seconds from start until the last time taken
+   */
+  public final(): number {
+    return (this.last.getTime() - this.base.getTime())/1000;
+  }
 }

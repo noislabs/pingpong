@@ -33,7 +33,7 @@ function timestampToDate(ts: string): Date {
 const pollTimeVerification = 350;
 const pollTimeDelivery = 1200;
 
-export async function pingpoing() {
+export async function pingpoing(): Promise<number> {
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, { prefix: addressPrefix });
   const address = (await wallet.getAccounts())[0].address;
   console.log("Wallet");
@@ -182,4 +182,6 @@ export async function pingpoing() {
       `    Block ${h}: ${info}`,
     );
   }
+
+  return timer.final()
 }
