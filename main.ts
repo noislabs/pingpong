@@ -128,10 +128,11 @@ if (import.meta.main) {
     "color: green",
   );
   const verificationTxs = await noisClient.searchTx(txQueryRound(drandContract, round), undefined);
+  console.log(`    Submission transactions:`);
   for (const tx of verificationTxs) {
     // tx index missing (see https://github.com/cosmos/cosmjs/issues/1361)
     console.log(
-      `    Height: ${tx.height}; Tx index: ${null}; Tx: ${tx.hash}`,
+      `    - Height: ${tx.height}; Tx index: ${null}; Tx: ${tx.hash}`,
     );
   }
 

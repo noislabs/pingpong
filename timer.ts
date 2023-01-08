@@ -17,9 +17,10 @@ export class Timer {
   }
 
   public timeAt(at: Date): string {
-    const sinceBase = at.getTime() - this.base.getTime();
-    const sinceLast = at.getTime() - this.last.getTime();
+    const sinceBase = (at.getTime() - this.base.getTime()) / 1000; // seconds
+    const sinceLast = (at.getTime() - this.last.getTime()) / 1000; // seconds
     this.last = at;
-    return `${(sinceBase / 1000).toFixed(1)}s (+${(sinceLast / 1000).toFixed(1)}s)`;
+    const sign = sinceLast >= 0 ? "+" : "";
+    return `${sinceBase.toFixed(1)}s (${sign}${sinceLast.toFixed(1)}s)`;
   }
 }
