@@ -33,7 +33,16 @@ function timestampToDate(ts: string): Date {
 const pollTimeVerification = 350;
 const pollTimeDelivery = 1200;
 
-export async function pingpoing(): Promise<number> {
+interface PinpongResult {
+  /** e2e run time */
+  readonly time: number;
+  /** Time we waited for the beacon (included in `time`) */
+  readonly waitForBeaconTime: number;
+  readonly jobId: string;
+  readonly drandRound: number;
+}
+
+export async function pingpoing(): Promise<PinpongResult> {
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, { prefix: addressPrefix });
   const address = (await wallet.getAccounts())[0].address;
   console.log("Wallet");
@@ -76,6 +85,7 @@ export async function pingpoing(): Promise<number> {
 
   let requestHeight = Number.NaN;
   let round = Number.NaN;
+  let waitForBeaconTime = Number.NaN;
   const lifecycle1: GetJobRequestResponse = await client.queryContractSmart(monitoringContract, {
     "get_request": { "job_id": jobId },
   });
@@ -99,11 +109,11 @@ export async function pingpoing(): Promise<number> {
     console.log(
       `    Publish time: ${publishTime.toISOString()}; Round: ${round}`,
     );
-    const waitForRound = publishTime.getTime() - Date.now();
+    waitForBeaconTime = (publishTime.getTime() - Date.now()) / 1000;
     console.log(
-      `    Sleeping until publish time is reached (${(waitForRound / 1000).toFixed(1)}s) ...`,
+      `    Sleeping until publish time is reached (${waitForBeaconTime.toFixed(1)}s) ...`,
     );
-    await sleep(waitForRound);
+    await sleep(waitForBeaconTime * 1000);
     console.log(
       `    Published: %c${timer.timeAt(publishTime)}`,
       "color: green",
@@ -183,5 +193,10 @@ export async function pingpoing(): Promise<number> {
     );
   }
 
-  return timer.final()
+  return {
+    time: timer.final(),
+    waitForBeaconTime,
+    jobId,
+    drandRound: round,
+  };
 }

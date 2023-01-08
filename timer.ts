@@ -28,6 +28,6 @@ export class Timer {
    * Returns the time in seconds from start until the last time taken
    */
   public final(): number {
-    return (this.last.getTime() - this.base.getTime())/1000;
+    return (this.last.getTime() - this.base.getTime()) / 1000;
   }
 }

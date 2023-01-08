@@ -8,6 +8,7 @@ export const mnemonic =
   "exile another monster skin patient drink despair mule baby meadow pencil casino";
 export const feeDenom = "ujunox";
 export const addressPrefix = "juno";
+export const chainId = "uni-5";
 export const gasPrice = GasPrice.fromString(`0.025${feeDenom}`);
 
 // nois chain
