@@ -1,26 +1,16 @@
 import { CosmWasmClient, SigningCosmWasmClient } from "npm:@cosmjs/cosmwasm-stargate";
-import { DirectSecp256k1HdWallet } from "npm:@cosmjs/proto-signing";
-import { sleep } from "npm:@cosmjs/utils";
+import { DirectSecp256k1HdWallet, Coin } from "npm:@cosmjs/proto-signing";
+import { sleep, assert } from "npm:@cosmjs/utils";
 import { Decimal } from "npm:@cosmjs/math";
 import { Tendermint34Client } from "npm:@cosmjs/tendermint-rpc";
-import {
-  addressPrefix,
-  drandContract,
-  endpoint,
-  feeDenom,
-  gasPrice,
-  mnemonic,
-  monitoringContract,
-  noisEndpoint,
-  proxyContract,
-} from "./env.ts";
+import { testnet } from "./env.ts";
 import {
   GetJobDeliveryResponse,
   GetJobRequestResponse,
   JobLifecycleDelivery,
   txQueryRound,
 } from "./monitoring.ts";
-import { roundAfter, timeOfRound } from "./drand.ts";
+import { timeOfRound, validRoundAfter } from "./drand.ts";
 import { lastNBlocks, transactionHash } from "./blocks.ts";
 import { Timer } from "./timer.ts";
 import { dot, nl, writeStdout } from "./console.ts";
@@ -43,37 +33,44 @@ interface PinpongResult {
 }
 
 export async function pingpoing(): Promise<PinpongResult> {
-  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, { prefix: addressPrefix });
+  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(testnet.mnemonic, { prefix: testnet.addressPrefix });
   const address = (await wallet.getAccounts())[0].address;
   console.log("Wallet");
   console.log(`    Address: ${address}`);
 
   const client = await SigningCosmWasmClient.connectWithSigner(
-    endpoint,
+    testnet.endpoint,
     wallet,
-    { gasPrice },
+    { gasPrice: testnet.gasPrice },
   );
   const chainId = await client.getChainId();
   console.log(`Chain info (${chainId})`);
-  const balance = await client.getBalance(address, feeDenom);
+  const balance = await client.getBalance(address, testnet.feeDenom);
   console.log(`    Balance: ${JSON.stringify(balance)}`);
 
-  const { prices } = await client.queryContractSmart(proxyContract, { "prices": {} });
+  const { prices } = await client.queryContractSmart(testnet.proxyContract, { "prices": {} });
   console.log(`    Prices: ${JSON.stringify(prices)}`);
+  assert(Array.isArray(prices) && prices.length === 1, "One element array expected");
+  const price: Coin = prices[0];
+
+  const noisClient = await CosmWasmClient.connect(testnet.noisEndpoint);
+  console.log(`Chain info (${await noisClient.getChainId()})`);
+  console.log(`    Drand contract address: ${testnet.drandContract}`);
+  const drandConfig = await noisClient.queryContractSmart(testnet.drandContract, { config: {}});
+  console.log(`    Drand contract config: ${JSON.stringify(drandConfig)}`);
 
   console.log(`Request Beacon (${chainId})`);
   const jobId = `Ping ${Math.random()}`;
   const timer = Timer.start();
 
-  const funds = { amount: "100", denom: "ujunox" };
   const gas = 1.1; // calculateFee(260_000, gasPrice);
   const ok = await client.execute(
     address,
-    monitoringContract,
+    testnet.monitoringContract,
     { "roll_dice": { "job_id": jobId } },
     gas,
     undefined,
-    [funds],
+    [price],
   );
   console.log(
     `    Height: ${ok.height}; Gas: ${ok.gasUsed}/${ok.gasWanted}; Tx: ${ok.transactionHash}`,
@@ -86,7 +83,7 @@ export async function pingpoing(): Promise<PinpongResult> {
   let requestHeight = Number.NaN;
   let round = Number.NaN;
   let waitForBeaconTime = Number.NaN;
-  const lifecycle1: GetJobRequestResponse = await client.queryContractSmart(monitoringContract, {
+  const lifecycle1: GetJobRequestResponse = await client.queryContractSmart(testnet.monitoringContract, {
     "get_request": { "job_id": jobId },
   });
   if (!lifecycle1) console.warn("Missing get_job_lifecycle response");
@@ -100,7 +97,7 @@ export async function pingpoing(): Promise<PinpongResult> {
       `    Safety margin: ${(safety_margin / 1_000000000).toFixed(1)}s`,
     );
     const a = timestampToDate(after);
-    round = roundAfter(a);
+    round = validRoundAfter(a); // wie should get this from the ack instead of calculating it here
     const publishTime = timeOfRound(round);
     console.log(
       `    After: ${a.toISOString()}`,
@@ -121,11 +118,10 @@ export async function pingpoing(): Promise<PinpongResult> {
   }
 
   console.log(`Beacon verification (Round ${round})`);
-  const noisClient = await CosmWasmClient.connect(noisEndpoint);
 
   writeStdout("    Waiting for verification ");
   while (true) {
-    const { beacon } = await noisClient.queryContractSmart(drandContract, {
+    const { beacon } = await noisClient.queryContractSmart(testnet.drandContract, {
       "beacon": { round: round },
     });
     if (beacon) break;
@@ -137,7 +133,7 @@ export async function pingpoing(): Promise<PinpongResult> {
     `    Verification: %c${timer.time()}`,
     "color: green",
   );
-  const verificationTxs = await noisClient.searchTx(txQueryRound(drandContract, round), undefined);
+  const verificationTxs = await noisClient.searchTx(txQueryRound(testnet.drandContract, round), undefined);
   console.log(`    Submission transactions:`);
   for (const tx of verificationTxs) {
     // tx index missing (see https://github.com/cosmos/cosmjs/issues/1361)
@@ -151,7 +147,7 @@ export async function pingpoing(): Promise<PinpongResult> {
   writeStdout("    Waiting for beacon delivery ");
   while (true) {
     try {
-      const delivery: GetJobDeliveryResponse = await client.queryContractSmart(monitoringContract, {
+      const delivery: GetJobDeliveryResponse = await client.queryContractSmart(testnet.monitoringContract, {
         "get_delivery": { "job_id": jobId },
       });
       if (delivery) {
@@ -171,7 +167,7 @@ export async function pingpoing(): Promise<PinpongResult> {
     "color: green",
   );
 
-  const tmClient = await Tendermint34Client.connect(endpoint);
+  const tmClient = await Tendermint34Client.connect(testnet.endpoint);
 
   const { height, tx_index } = lifecycle2;
   const hash = typeof tx_index == "number"
