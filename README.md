@@ -1,3 +1,5 @@
+1. Download monitoring
+   `wget https://github.com/noislabs/nois-contracts/releases/download/v0.11.0/nois_monitoring.wasm`
 1. Upload and instantiate monitoring contract
-   `deno run --allow-read --allow-net instantiate_monitoring.ts PATH_TO_MONITORING_WASM`
+   `deno run --allow-read --allow-net instantiate_monitoring.ts nois_monitoring.wasm`
 1. Run `deno run --allow-read --allow-net main.ts`
