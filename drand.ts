@@ -23,12 +23,12 @@ function roundAfterDivisor(base: Date, divisor: number): number {
   const round = roundAfter(base);
   const remainder = round % divisor;
   if (remainder != 0) {
-    return round + divisor - remainder
+    return round + divisor - remainder;
   } else {
-    return round
+    return round;
   }
 }
 
 export function validRoundAfter(base: Date): number {
-  return roundAfterDivisor(base, 10)
+  return roundAfterDivisor(base, 10);
 }

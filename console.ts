@@ -14,3 +14,7 @@ export function dot() {
 export function writeStdout(input: string) {
   Deno.stdout.writeSync(toUtf8(input));
 }
+
+export function debugLog(msg: string) {
+  writeStdout(`[${new Date().toISOString()}] ` + msg + "\n");
+}

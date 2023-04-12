@@ -1,6 +1,6 @@
 import { CosmWasmClient, SigningCosmWasmClient } from "npm:@cosmjs/cosmwasm-stargate";
-import { DirectSecp256k1HdWallet, Coin } from "npm:@cosmjs/proto-signing";
-import { sleep, assert } from "npm:@cosmjs/utils";
+import { Coin, DirectSecp256k1HdWallet } from "npm:@cosmjs/proto-signing";
+import { assert, sleep } from "npm:@cosmjs/utils";
 import { Decimal } from "npm:@cosmjs/math";
 import { Tendermint34Client } from "npm:@cosmjs/tendermint-rpc";
 import { testnet } from "./env.ts";
@@ -33,7 +33,9 @@ interface PinpongResult {
 }
 
 export async function pingpoing(): Promise<PinpongResult> {
-  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(testnet.mnemonic, { prefix: testnet.addressPrefix });
+  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(testnet.mnemonic, {
+    prefix: testnet.addressPrefix,
+  });
   const address = (await wallet.getAccounts())[0].address;
   console.log("Wallet");
   console.log(`    Address: ${address}`);
@@ -56,7 +58,7 @@ export async function pingpoing(): Promise<PinpongResult> {
   const noisClient = await CosmWasmClient.connect(testnet.noisEndpoint);
   console.log(`Chain info (${await noisClient.getChainId()})`);
   console.log(`    Drand contract address: ${testnet.drandContract}`);
-  const drandConfig = await noisClient.queryContractSmart(testnet.drandContract, { config: {}});
+  const drandConfig = await noisClient.queryContractSmart(testnet.drandContract, { config: {} });
   console.log(`    Drand contract config: ${JSON.stringify(drandConfig)}`);
 
   console.log(`Request Beacon (${chainId})`);
@@ -83,9 +85,12 @@ export async function pingpoing(): Promise<PinpongResult> {
   let requestHeight = Number.NaN;
   let round = Number.NaN;
   let waitForBeaconTime = Number.NaN;
-  const lifecycle1: GetJobRequestResponse = await client.queryContractSmart(testnet.monitoringContract, {
-    "get_request": { "job_id": jobId },
-  });
+  const lifecycle1: GetJobRequestResponse = await client.queryContractSmart(
+    testnet.monitoringContract,
+    {
+      "get_request": { "job_id": jobId },
+    },
+  );
   if (!lifecycle1) console.warn("Missing get_job_lifecycle response");
   else {
     const { height, tx_index, safety_margin, after } = lifecycle1;
@@ -133,7 +138,10 @@ export async function pingpoing(): Promise<PinpongResult> {
     `    Verification: %c${timer.time()}`,
     "color: green",
   );
-  const verificationTxs = await noisClient.searchTx(txQueryRound(testnet.drandContract, round), undefined);
+  const verificationTxs = await noisClient.searchTx(
+    txQueryRound(testnet.drandContract, round),
+    undefined,
+  );
   console.log(`    Submission transactions:`);
   for (const tx of verificationTxs) {
     // tx index missing (see https://github.com/cosmos/cosmjs/issues/1361)
@@ -147,9 +155,12 @@ export async function pingpoing(): Promise<PinpongResult> {
   writeStdout("    Waiting for beacon delivery ");
   while (true) {
     try {
-      const delivery: GetJobDeliveryResponse = await client.queryContractSmart(testnet.monitoringContract, {
-        "get_delivery": { "job_id": jobId },
-      });
+      const delivery: GetJobDeliveryResponse = await client.queryContractSmart(
+        testnet.monitoringContract,
+        {
+          "get_delivery": { "job_id": jobId },
+        },
+      );
       if (delivery) {
         lifecycle2 = delivery;
         break;
