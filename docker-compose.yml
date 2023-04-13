@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  nois-pingpong:
+    image: docker.io/noislabs/nois-pingpong:latest
+    ports:
+      - "19000:3001"
