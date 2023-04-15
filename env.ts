@@ -19,8 +19,8 @@ export interface Config {
 export const testnet: Config = {
   // dapp chain
   endpoint: "https://juno-testnet-rpc.polkachu.com/",
-  monitoringContract: "juno1zz9a5ewvhpx9m29qv6v8n74p2n376r3h89gqv0utu5v4fr85kuvqeg32gx",
-  proxyContract: "juno1ythyt9wm9y4yxlv8eqccs4p78tylky5q0yx8gfpwycq6ywlycces87e20q",
+  monitoringContract: "juno1djtv36ctz4tmxw8vmfwtqmxdchcgygxsfvffmacynt9c08jeu0sqx87lf6",
+  proxyContract: "juno13atw6x2vlvckz7fx89dc8zz7e83ysj3m8rs5dazcwj8scdwugn8s89wwqc",
   mnemonic: "exile another monster skin patient drink despair mule baby meadow pencil casino", // juno1c90jfas58mcf2ufuf0qer3xk3dvnz6zs029tf7
   feeDenom: "ujunox",
   addressPrefix: "juno",
