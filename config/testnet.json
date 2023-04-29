@@ -1,7 +1,7 @@
 {
   "endpoint": "https://juno-testnet-rpc.polkachu.com/",
-  "monitoringContract": "juno1djtv36ctz4tmxw8vmfwtqmxdchcgygxsfvffmacynt9c08jeu0sqx87lf6",
-  "proxyContract": "juno13atw6x2vlvckz7fx89dc8zz7e83ysj3m8rs5dazcwj8scdwugn8s89wwqc",
+  "monitoringContract": "juno14eut85v23s0ykecn5stldcxen0fscm2au7a95k3dc8s4qk72jk6q44wrlv",
+  "proxyContract": "juno1pjpntyvkxeuxd709jlupuea3xzxlzsfq574kqefv77fr2kcg4mcqvwqedq",
   "mnemonic": "exile another monster skin patient drink despair mule baby meadow pencil casino",
   "feeDenom": "ujunox",
   "addressPrefix": "juno",
