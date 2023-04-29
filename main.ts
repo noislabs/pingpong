@@ -62,7 +62,7 @@ if (import.meta.main) {
 
   for (let i = 0; i < limit; i++) {
     const t = histogram.startTimer({ chainId: chainInfo.chainId });
-    const { time, waitForBeaconTime, drandRound: _ } = await pingpoing();
+    const { time, waitForBeaconTime, drandRound: _ } = await pingpoing(testnet);
     t();
 
     const processingTime = time - waitForBeaconTime;
