@@ -8,7 +8,6 @@ export interface Config {
   mnemonic: string;
   feeDenom: string;
   addressPrefix: string;
-  chainId: string;
   gasPrice: GasPrice;
 
   // nois chain (Testnet 005)

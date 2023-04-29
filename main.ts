@@ -4,6 +4,7 @@ import express from "npm:express@4.18.2";
 import { testnet } from "./env.ts";
 
 import { pingpoing } from "./pingpong.ts";
+import { getChainInfo } from "./chain_info.ts";
 import { debugLog } from "./console.ts";
 
 const flags = parse(Deno.args, {
@@ -56,13 +57,16 @@ if (import.meta.main) {
     debugLog(`Listening on port ${port} ...`);
   });
 
+  const chainInfo = await getChainInfo(testnet.endpoint);
+  debugLog(`Chain info: ${JSON.stringify(chainInfo)}`);
+
   for (let i = 0; i < limit; i++) {
-    const t = histogram.startTimer({ chainId: testnet.chainId });
+    const t = histogram.startTimer({ chainId: chainInfo.chainId });
     const { time, waitForBeaconTime, drandRound: _ } = await pingpoing();
     t();
 
     const processingTime = time - waitForBeaconTime;
-    histogramProcessing.observe({ chainId: testnet.chainId }, processingTime)
+    histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
   }
 
   debugLog("Closing metrics server...");

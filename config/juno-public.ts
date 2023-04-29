@@ -9,7 +9,6 @@ export const testnet: Config = {
   mnemonic: "exile another monster skin patient drink despair mule baby meadow pencil casino", // juno1c90jfas58mcf2ufuf0qer3xk3dvnz6zs029tf7
   feeDenom: "ujuno",
   addressPrefix: "juno",
-  chainId: "juno-1",
   gasPrice: GasPrice.fromString(`0.025ujuno`),
 
   // nois chain (Testnet 005)
