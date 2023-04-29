@@ -34,6 +34,15 @@ interface PinpongResult {
   readonly drandRound: number;
 }
 
+function printableCoin(coin: Coin): string {
+  if (coin.denom?.startsWith("u")) {
+    const ticker = coin.denom.slice(1).toUpperCase();
+    return Decimal.fromAtomics(coin.amount ?? "0", 6).toString() + " " + ticker;
+  } else {
+    return coin.amount + coin.denom;
+  }
+}
+
 export async function pingpoing(config: Config): Promise<PinpongResult> {
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(config.mnemonic, {
     prefix: config.addressPrefix,
@@ -52,6 +61,13 @@ export async function pingpoing(config: Config): Promise<PinpongResult> {
   const balance = await client.getBalance(address, config.feeDenom);
   console.log(`    Balance: ${JSON.stringify(balance)}`);
 
+  const { config: proxyConfig } = await client.queryContractSmart(config.proxyContract, {
+    "config": {},
+  });
+  console.log(`    Proxy config: ${JSON.stringify(proxyConfig)}`);
+  const paymentAddress = proxyConfig.payment; // address on Nois
+  assert(typeof paymentAddress === "string", "Missing payment address");
+
   const { prices } = await client.queryContractSmart(config.proxyContract, { "prices": {} });
   console.log(`    Prices: ${JSON.stringify(prices)}`);
   assert(Array.isArray(prices) && prices.length === 1, "One element array expected");
@@ -62,6 +78,9 @@ export async function pingpoing(config: Config): Promise<PinpongResult> {
   console.log(`    Drand contract address: ${config.drandContract}`);
   const drandConfig = await noisClient.queryContractSmart(config.drandContract, { config: {} });
   console.log(`    Drand contract config: ${JSON.stringify(drandConfig)}`);
+  const paymentBalance = await noisClient.getBalance(paymentAddress, "unois");
+  console.log(`    Payment address: ${paymentAddress}`);
+  console.log(`    Payment balance: ${printableCoin(paymentBalance)}`);
 
   console.log(`Request Beacon (${chainId})`);
   const jobId = `Ping ${Math.random()}`;
