@@ -1,5 +1,7 @@
 import { SigningCosmWasmClient } from "npm:@cosmjs/cosmwasm-stargate";
 import { DirectSecp256k1HdWallet } from "npm:@cosmjs/proto-signing";
+import { GasPrice } from "npm:@cosmjs/stargate";
+
 import { testnet } from "./env.ts";
 
 const wasmPath = Deno.args[0];
@@ -14,7 +16,7 @@ if (import.meta.main) {
   const client = await SigningCosmWasmClient.connectWithSigner(
     testnet.endpoint,
     wallet,
-    { gasPrice: testnet.gasPrice },
+    { gasPrice: GasPrice.fromString(testnet.gasPrice) },
   );
 
   const wasm = Deno.readFileSync(wasmPath);

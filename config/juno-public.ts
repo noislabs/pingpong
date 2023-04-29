@@ -1,5 +1,4 @@
 import { Config } from "./config.ts";
-import { GasPrice } from "npm:@cosmjs/stargate";
 
 export const testnet: Config = {
   // dapp chain
@@ -9,7 +8,7 @@ export const testnet: Config = {
   mnemonic: "exile another monster skin patient drink despair mule baby meadow pencil casino", // juno1c90jfas58mcf2ufuf0qer3xk3dvnz6zs029tf7
   feeDenom: "ujuno",
   addressPrefix: "juno",
-  gasPrice: GasPrice.fromString(`0.025ujuno`),
+  gasPrice: "0.025ujuno",
 
   // nois chain (Testnet 005)
   noisEndpoint: "https://rpc.cosmos.directory/nois",

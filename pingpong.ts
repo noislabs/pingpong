@@ -3,7 +3,9 @@ import { Coin, DirectSecp256k1HdWallet } from "npm:@cosmjs/proto-signing";
 import { assert, sleep } from "npm:@cosmjs/utils";
 import { Decimal } from "npm:@cosmjs/math";
 import { Tendermint34Client } from "npm:@cosmjs/tendermint-rpc";
-import { Config } from "./env.ts";
+import { GasPrice } from "npm:@cosmjs/stargate";
+
+import { Config } from "./config.ts";
 import {
   GetJobDeliveryResponse,
   GetJobRequestResponse,
@@ -43,7 +45,7 @@ export async function pingpoing(config: Config): Promise<PinpongResult> {
   const client = await SigningCosmWasmClient.connectWithSigner(
     config.endpoint,
     wallet,
-    { gasPrice: config.gasPrice },
+    { gasPrice: GasPrice.fromString(config.gasPrice) },
   );
   const chainId = await client.getChainId();
   console.log(`Chain info (${chainId})`);
