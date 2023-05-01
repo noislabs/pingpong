@@ -1,5 +1,3 @@
-import { GasPrice } from "npm:@cosmjs/stargate";
-
 export interface Config {
   // dapp chain
   endpoint: string;
@@ -8,8 +6,7 @@ export interface Config {
   mnemonic: string;
   feeDenom: string;
   addressPrefix: string;
-  chainId: string;
-  gasPrice: GasPrice;
+  gasPrice: string;
 
   // nois chain (Testnet 005)
   noisEndpoint: string;

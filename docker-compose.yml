@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        CONFIG_FILE: config/testnet.ts
+        CONFIG_FILE: config/testnet.json
     image: docker.io/noislabs/nois-pingpong:testnet
     ports:
       - "19000:3001"
@@ -15,7 +15,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        CONFIG_FILE: config/juno-public.ts
+        CONFIG_FILE: config/juno-public.json
     image: docker.io/noislabs/nois-pingpong:juno-public
     ports:
       - "19001:3001"

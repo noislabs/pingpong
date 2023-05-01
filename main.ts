@@ -1,9 +1,9 @@
 import { parse } from "https://deno.land/std@0.171.0/flags/mod.ts";
 import * as promclient from "npm:prom-client";
 import express from "npm:express@4.18.2";
-import { testnet } from "./env.ts";
 
 import { pingpoing } from "./pingpong.ts";
+import { getChainInfo } from "./chain_info.ts";
 import { debugLog } from "./console.ts";
 
 const flags = parse(Deno.args, {
@@ -16,6 +16,10 @@ const flags = parse(Deno.args, {
 const port = 3001;
 
 if (import.meta.main) {
+  const { default: config } = await import("./config.json", {
+    assert: { type: "json" },
+  });
+
   const app = express();
 
   let limit: number;
@@ -30,11 +34,11 @@ if (import.meta.main) {
       throw new Error("Argument mode must be 'single' or loop");
   }
 
-
   const histogram = new promclient.Histogram({
     name: "e2e",
     help: "End2end testing",
     labelNames: ["chainId"] as const,
+    // deno-fmt-ignore
     buckets: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220, 240, 260, 280, 300],
   });
 
@@ -42,6 +46,7 @@ if (import.meta.main) {
     name: "processing",
     help: "The time of an e2e test we did not spend on waiting for drand",
     labelNames: ["chainId"] as const,
+    // deno-fmt-ignore
     buckets: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220, 240, 260, 280, 300],
   });
 
@@ -55,15 +60,18 @@ if (import.meta.main) {
     debugLog(`Listening on port ${port} ...`);
   });
 
+  const chainInfo = await getChainInfo(config.endpoint);
+  debugLog(`Chain info: ${JSON.stringify(chainInfo)}`);
+
   for (let i = 0; i < limit; i++) {
-    const t = histogram.startTimer({ chainId: testnet.chainId });
-    const { time, waitForBeaconTime, drandRound: _ } = await pingpoing();
+    const t = histogram.startTimer({ chainId: chainInfo.chainId });
+    const { time, waitForBeaconTime, drandRound: _ } = await pingpoing(config);
     t();
 
     const processingTime = time - waitForBeaconTime;
-    histogramProcessing.observe({ chainId: testnet.chainId }, processingTime)
+    histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
   }
 
-  debugLog("Closing metrics server...")
+  debugLog("Closing metrics server...");
   server.close();
 }
