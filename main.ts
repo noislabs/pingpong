@@ -2,7 +2,7 @@ import { parse } from "https://deno.land/std@0.171.0/flags/mod.ts";
 import * as promclient from "npm:prom-client";
 import express from "npm:express@4.18.2";
 
-import { pingpoing } from "./pingpong.ts";
+import { pingpong } from "./pingpong.ts";
 import { getChainInfo } from "./chain_info.ts";
 import { debugLog } from "./console.ts";
 
@@ -65,11 +65,29 @@ if (import.meta.main) {
 
   for (let i = 0; i < limit; i++) {
     const t = histogram.startTimer({ chainId: chainInfo.chainId });
-    const { time, waitForBeaconTime, drandRound: _ } = await pingpoing(config);
-    t();
+    let result;
+    let timeoutReached = false;
+    try {
+      result = await Promise.race([
+        pingpong(config),
+        new Promise((_, reject) => setTimeout(() => {
+          timeoutReached = true;
+          reject(new Error('Timeout'))
+        }, 10 * 60 * 1000)), // 10 minutes timeout
+      ]);
+    } catch (_err) {
+      // handle timeout error
+      console.log("Timeout, Setting time to 1 hour");
+      histogramProcessing.observe({ chainId: chainInfo.chainId }, 3600);
+    }
 
-    const processingTime = time - waitForBeaconTime;
-    histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
+
+    if (!timeoutReached) {
+      const { time, waitForBeaconTime, drandRound: _ } = result;
+      t();
+      const processingTime = time - waitForBeaconTime;
+      histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
+    }
   }
 
   debugLog("Closing metrics server...");
