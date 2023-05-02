@@ -73,20 +73,22 @@ if (import.meta.main) {
         new Promise((_, reject) => setTimeout(() => {
           timeoutReached = true;
           reject(new Error('Timeout'))
-        }, 10 * 60 * 1000)), // 10 minutes timeout
+        }, config.timeout_time_seconds * 1000)),
       ]);
     } catch (_err) {
       // handle timeout error
-      console.log("Timeout, Setting time to 1 hour");
+      console.log("Timeout after",config.timeout_time_seconds," seconds, Setting time to 1 hour");
       histogramProcessing.observe({ chainId: chainInfo.chainId }, 3600);
     }
-
-
     if (!timeoutReached) {
       const { time, waitForBeaconTime, drandRound: _ } = result;
       t();
       const processingTime = time - waitForBeaconTime;
       histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
+    }
+    if (flags.mode == "loop"){
+    console.log("sleeping for ",config.sleep_time_minutes," minutes");
+    await new Promise(resolve => setTimeout(resolve, config.sleep_time_minutes * 60 *1000));
     }
   }
 

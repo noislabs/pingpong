@@ -43,7 +43,7 @@ function printableCoin(coin: Coin): string {
   }
 }
 
-export async function pingpoing(config: Config): Promise<PinpongResult> {
+export async function pingpong(config: Config): Promise<PinpongResult> {
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(config.mnemonic, {
     prefix: config.addressPrefix,
   });
