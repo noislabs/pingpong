@@ -82,10 +82,10 @@ if (import.meta.main) {
     }
     if (!timeoutReached) {
       const { time, waitForBeaconTime, drandRound: _ } = result;
-      t();
       const processingTime = time - waitForBeaconTime;
       histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
     }
+    t();
     if (flags.mode == "loop"){
     console.log("sleeping for ",config.sleep_time_minutes," minutes");
     await new Promise(resolve => setTimeout(resolve, config.sleep_time_minutes * 60 *1000));
