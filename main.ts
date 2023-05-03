@@ -63,6 +63,8 @@ if (import.meta.main) {
   const chainInfo = await getChainInfo(config.endpoint);
   debugLog(`Chain info: ${JSON.stringify(chainInfo)}`);
 
+  const inf_time=3600;
+
   for (let i = 0; i < limit; i++) {
     const t = histogram.startTimer({ chainId: chainInfo.chainId });
     let result;
@@ -78,14 +80,16 @@ if (import.meta.main) {
       // handle timeout error
       timeoutReached = true;
       console.log("Timeout after",config.timeout_time_seconds," seconds, Setting prometheus elapsed time to 1 hour (+inf)");
-      histogramProcessing.observe({ chainId: chainInfo.chainId }, 3600);
+
+      histogramProcessing.observe({ chainId: chainInfo.chainId }, inf_time);
+      histogram.observe({ chainId: chainInfo.chainId }, inf_time);
     }
     if (!timeoutReached) {
       const { time, waitForBeaconTime, drandRound: _ } = result;
+      t();
       const processingTime = time - waitForBeaconTime;
       histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
     }
-    t();
     if (flags.mode == "loop"){
     console.log("sleeping for ",config.sleep_time_minutes," minutes");
     await new Promise(resolve => setTimeout(resolve, config.sleep_time_minutes * 60 *1000));
