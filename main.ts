@@ -71,12 +71,12 @@ if (import.meta.main) {
       result = await Promise.race([
         pingpong(config),
         new Promise((_, reject) => setTimeout(() => {
-          timeoutReached = true;
           reject(new Error('Timeout'))
         }, config.timeout_time_seconds * 1000)),
       ]);
     } catch (_err) {
       // handle timeout error
+      timeoutReached = true;
       console.log("Timeout after",config.timeout_time_seconds," seconds, Setting time to 1 hour");
       histogramProcessing.observe({ chainId: chainInfo.chainId }, 3600);
     }
