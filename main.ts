@@ -77,7 +77,7 @@ if (import.meta.main) {
     } catch (_err) {
       // handle timeout error
       timeoutReached = true;
-      console.log("Timeout after",config.timeout_time_seconds," seconds, Setting time to 1 hour");
+      console.log("Timeout after",config.timeout_time_seconds," seconds, Setting prometheus elapsed time to 1 hour (+inf)");
       histogramProcessing.observe({ chainId: chainInfo.chainId }, 3600);
     }
     if (!timeoutReached) {
