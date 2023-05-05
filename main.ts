@@ -63,7 +63,7 @@ if (import.meta.main) {
   const chainInfo = await getChainInfo(config.endpoint);
   debugLog(`Chain info: ${JSON.stringify(chainInfo)}`);
 
-  const inf_time=3600;
+  const inf_time = 3600;
 
   for (let i = 0; i < limit; i++) {
     const t = histogram.startTimer({ chainId: chainInfo.chainId });
@@ -72,14 +72,20 @@ if (import.meta.main) {
     try {
       result = await Promise.race([
         pingpong(config),
-        new Promise((_, reject) => setTimeout(() => {
-          reject(new Error('Timeout'))
-        }, config.timeout_time_seconds * 1000)),
+        new Promise((_, reject) =>
+          setTimeout(() => {
+            reject(new Error("Timeout"));
+          }, config.timeout_time_seconds * 1000)
+        ),
       ]);
     } catch (_err) {
       // handle timeout error
       timeoutReached = true;
-      console.log("Timeout after",config.timeout_time_seconds," seconds, Setting prometheus elapsed time to 1 hour (+inf)");
+      console.log(
+        "Timeout after",
+        config.timeout_time_seconds,
+        " seconds, Setting prometheus elapsed time to 1 hour (+inf)",
+      );
 
       histogramProcessing.observe({ chainId: chainInfo.chainId }, inf_time);
       histogram.observe({ chainId: chainInfo.chainId }, inf_time);
@@ -90,9 +96,9 @@ if (import.meta.main) {
       const processingTime = time - waitForBeaconTime;
       histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
     }
-    if (flags.mode == "loop"){
-    console.log("sleeping for ",config.sleep_time_minutes," minutes");
-    await new Promise(resolve => setTimeout(resolve, config.sleep_time_minutes * 60 *1000));
+    if (flags.mode == "loop") {
+      console.log("sleeping for ", config.sleep_time_minutes, " minutes");
+      await new Promise((resolve) => setTimeout(resolve, config.sleep_time_minutes * 60 * 1000));
     }
   }
 
