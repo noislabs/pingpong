@@ -25,10 +25,10 @@ function timestampToDate(ts: string): Date {
 const pollTimeVerification = 350;
 const pollTimeDelivery = 1200;
 
-interface PinpongResult {
-  /** e2e run time */
+export interface PinpongResult {
+  /** e2e run time in seconds */
   readonly time: number;
-  /** Time we waited for the beacon (included in `time`) */
+  /** Time we waited for the beacon (included in `time`) in seconds */
   readonly waitForBeaconTime: number;
   readonly jobId: string;
   readonly drandRound: number;
@@ -43,7 +43,7 @@ function printableCoin(coin: Coin): string {
   }
 }
 
-export async function pingpoing(config: Config): Promise<PinpongResult> {
+export async function pingpong(config: Config): Promise<PinpongResult> {
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(config.mnemonic, {
     prefix: config.addressPrefix,
   });

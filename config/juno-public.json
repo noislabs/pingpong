@@ -8,5 +8,8 @@
   "gasPrice": "0.025ujuno",
 
   "noisEndpoint": "https://rpc.cosmos.directory/nois",
-  "drandContract": "nois19w26q6n44xqepduudfz2xls4pc5lltpn6rxu34g0jshxu3rdujzsj7dgu8"
+  "drandContract": "nois19w26q6n44xqepduudfz2xls4pc5lltpn6rxu34g0jshxu3rdujzsj7dgu8",
+
+  "sleep_time_minutes": 480,
+  "timeout_time_seconds": 900
 }
