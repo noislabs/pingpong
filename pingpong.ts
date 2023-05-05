@@ -165,9 +165,8 @@ export async function pingpoing(config: Config): Promise<PinpongResult> {
   );
   console.log(`    Submission transactions:`);
   for (const tx of verificationTxs) {
-    // tx index missing (see https://github.com/cosmos/cosmjs/issues/1361)
     console.log(
-      `    - Height: ${tx.height}; Tx index: ${null}; Tx: ${tx.hash}`,
+      `    - Height: ${tx.height}; Tx index: ${tx.txIndex}; Tx: ${tx.hash}`,
     );
   }
 
