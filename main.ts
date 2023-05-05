@@ -2,7 +2,7 @@ import { parse } from "https://deno.land/std@0.171.0/flags/mod.ts";
 import * as promclient from "npm:prom-client";
 import express from "npm:express@4.18.2";
 
-import { pingpoing } from "./pingpong.ts";
+import { pingpong } from "./pingpong.ts";
 import { getChainInfo } from "./chain_info.ts";
 import { debugLog } from "./console.ts";
 
@@ -49,6 +49,20 @@ if (import.meta.main) {
     // deno-fmt-ignore
     buckets: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220, 240, 260, 280, 300],
   });
+  const histogramRequestConsumerTxInclusion = new promclient.Histogram({
+    name: "include_tx_in_block_in_consumer_chain",
+    help: "The time it takes the beacon request to be included in a block",
+    labelNames: ["chainId"] as const,
+    // deno-fmt-ignore
+    buckets: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 40, 60, 120, 300],
+  });
+  const histogramGatewayEnqueue = new promclient.Histogram({
+    name: "gateway_incrementes_the_beacon_number_for_customer",
+    help: "The time it takes between the inclusion in a consumer chain block and the gateway incrementing the beacon request number",
+    labelNames: ["chainId"] as const,
+    // deno-fmt-ignore
+    buckets: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220, 240, 260, 280, 300],
+  });
 
   // deno-lint-ignore no-explicit-any
   app.get("/metrics", (_req: any, res: any) => {
@@ -63,13 +77,41 @@ if (import.meta.main) {
   const chainInfo = await getChainInfo(config.endpoint);
   debugLog(`Chain info: ${JSON.stringify(chainInfo)}`);
 
+  const inf_time=3600;
+
   for (let i = 0; i < limit; i++) {
     const t = histogram.startTimer({ chainId: chainInfo.chainId });
-    const { time, waitForBeaconTime, drandRound: _ } = await pingpoing(config);
-    t();
+    let result;
+    let timeoutReached = false;
+    try {
+      result = await Promise.race([
+        pingpong(config),
+        new Promise((_, reject) => setTimeout(() => {
+          reject(new Error('Timeout'))
+        }, config.timeout_time_seconds * 1000)),
+      ]);
+    } catch (_err) {
+      // handle timeout error
+      timeoutReached = true;
+      console.log("Timeout after",config.timeout_time_seconds," seconds, Setting prometheus elapsed time to 1 hour (+inf)");
 
-    const processingTime = time - waitForBeaconTime;
-    histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
+      histogramProcessing.observe({ chainId: chainInfo.chainId }, inf_time);
+      histogram.observe({ chainId: chainInfo.chainId }, inf_time);
+      histogramGatewayEnqueue.observe({ chainId: chainInfo.chainId }, inf_time);
+      histogramRequestConsumerTxInclusion.observe({ chainId: chainInfo.chainId }, inf_time);
+    }
+    if (!timeoutReached) {
+      const { time, waitForBeaconTime, waitForGatewayEnqueTime, beaconRequestTxInclusionTime, drandRound: _ } = result;
+      t();
+      const processingTime = time - waitForBeaconTime;
+      histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
+      histogramGatewayEnqueue.observe({ chainId: chainInfo.chainId }, waitForGatewayEnqueTime);
+      histogramRequestConsumerTxInclusion.observe({ chainId: chainInfo.chainId }, beaconRequestTxInclusionTime);
+    }
+    if (flags.mode == "loop"){
+    console.log("sleeping for ",config.sleep_time_minutes," minutes");
+    await new Promise(resolve => setTimeout(resolve, config.sleep_time_minutes * 60 *1000));
+    }
   }
 
   debugLog("Closing metrics server...");
