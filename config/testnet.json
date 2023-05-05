@@ -10,6 +10,6 @@
   "noisEndpoint": "https://nois-testnet-rpc.polkachu.com:443/",
   "drandContract": "nois14xef285hz5cx5q9hh32p9nztu3cct4g44sxjgx3dmftt2tj2rweqkjextk",
 
-  "sleep_time_minutes": 10,
+  "sleep_time_minutes": 1,
   "timeout_time_seconds": 300
 }

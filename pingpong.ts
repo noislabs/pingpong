@@ -23,6 +23,7 @@ function timestampToDate(ts: string): Date {
 }
 
 const pollTimeVerification = 350;
+const pollTimeGateway = 1200;
 const pollTimeDelivery = 1200;
 
 interface PinpongResult {
@@ -30,6 +31,8 @@ interface PinpongResult {
   readonly time: number;
   /** Time we waited for the beacon (included in `time`) */
   readonly waitForBeaconTime: number;
+  readonly waitForGatewayEnqueTime: number;
+  readonly beaconRequestTxInclusionTime: number;
   readonly jobId: string;
   readonly drandRound: number;
 }
@@ -66,6 +69,7 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
   });
   console.log(`    Proxy config: ${JSON.stringify(proxyConfig)}`);
   const paymentAddress = proxyConfig.payment; // address on Nois
+
   assert(typeof paymentAddress === "string", "Missing payment address");
 
   const { prices } = await client.queryContractSmart(config.proxyContract, { "prices": {} });
@@ -78,12 +82,24 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
   console.log(`    Drand contract address: ${config.drandContract}`);
   const drandConfig = await noisClient.queryContractSmart(config.drandContract, { config: {} });
   console.log(`    Drand contract config: ${JSON.stringify(drandConfig)}`);
+  const gatewayAddress = drandConfig.gateway;
   const paymentBalance = await noisClient.getBalance(paymentAddress, "unois");
   console.log(`    Payment address: ${paymentAddress}`);
   console.log(`    Payment balance: ${printableCoin(paymentBalance)}`);
+  console.log(`    Gateway address: ${gatewayAddress}`);
+  const { customers } = await noisClient.queryContractSmart(gatewayAddress, { "customers": {} });
+  const beaconsNumber = customers.find(c => c.payment === paymentAddress)?.requested_beacons;
+  console.log(`    Customers: ${JSON.stringify(customers)}`);
+  console.log(`    Beacons_number: `,beaconsNumber);
 
   console.log(`Request Beacon (${chainId})`);
   const jobId = `Ping ${Math.random()}`;
+
+  let requestHeight = Number.NaN;
+  let round = Number.NaN;
+  let waitForBeaconTime = Number.NaN;
+  let waitForGatewayEnqueTime = Number.NaN;
+  let beaconRequestTxInclusionTime = Number.NaN;
   const timer = Timer.start();
 
   const gas = 1.1; // calculateFee(260_000, gasPrice);
@@ -103,9 +119,13 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
     "color: green",
   );
 
-  let requestHeight = Number.NaN;
-  let round = Number.NaN;
-  let waitForBeaconTime = Number.NaN;
+  beaconRequestTxInclusionTime=timer.final();
+  console.log(
+    `    beaconRequestTxInclusionTime: %c${beaconRequestTxInclusionTime}`,
+    "color: green",
+  );
+
+
   const lifecycle1: GetJobRequestResponse = await client.queryContractSmart(
     config.monitoringContract,
     {
@@ -123,7 +143,7 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
       `    Safety margin: ${(safety_margin / 1_000000000).toFixed(1)}s`,
     );
     const a = timestampToDate(after);
-    round = validRoundAfter(a); // wie should get this from the ack instead of calculating it here
+    round = validRoundAfter(a); // we should get this from the ack instead of calculating it here
     const publishTime = timeOfRound(round);
     console.log(
       `    After: ${a.toISOString()}`,
@@ -170,6 +190,37 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
       `    - Height: ${tx.height}; Tx index: ${null}; Tx: ${tx.hash}`,
     );
   }
+
+  //Gateway
+  console.log(`Gateway: Enqueue job `);
+
+  writeStdout("    Waiting for gateway enqueue ");
+  while (true) {
+    try {
+      const { customers } = await noisClient.queryContractSmart(gatewayAddress, { "customers": {} });
+      const beaconsNumberNew = customers.find(c => c.payment === paymentAddress)?.requested_beacons;
+      if (beaconsNumberNew>beaconsNumber) {
+        console.log(`gateway enqueued`)
+        break;
+      } else {
+        dot();
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+    await sleep(pollTimeGateway);
+  }
+  nl();
+  console.log(
+    `    Gateway since beginning: %c${timer.time()}`,
+    "color: green",
+  );
+  waitForGatewayEnqueTime = timer.final() - beaconRequestTxInclusionTime;
+
+  console.log(
+    `    Gateway since inclusion: %c${waitForGatewayEnqueTime}`,
+    "color: green",
+  );
 
   console.log(`Deliver Beacon (${chainId})`);
   let lifecycle2: JobLifecycleDelivery;
@@ -225,6 +276,8 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
     time: timer.final(),
     waitForBeaconTime,
     jobId,
+    waitForGatewayEnqueTime,
+    beaconRequestTxInclusionTime,
     drandRound: round,
   };
 }
