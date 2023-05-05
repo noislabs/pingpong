@@ -11,4 +11,7 @@ export interface Config {
   // nois chain (Testnet 005)
   noisEndpoint: string;
   drandContract: string;
+
+  sleep_time_minutes: number;
+  timeout_time_seconds: number;
 }

@@ -25,7 +25,7 @@ function timestampToDate(ts: string): Date {
 const pollTimeVerification = 350;
 const pollTimeDelivery = 1200;
 
-interface PinpongResult {
+export interface PinpongResult {
   /** e2e run time */
   readonly time: number;
   /** Time we waited for the beacon (included in `time`) */

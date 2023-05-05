@@ -15,6 +15,12 @@ const flags = parse(Deno.args, {
 
 const port = 3001;
 
+class TimeoutError extends Error {
+  constructor() {
+    super("Timeout reached");
+  }
+}
+
 if (import.meta.main) {
   const { default: config } = await import("./config.json", {
     assert: { type: "json" },
@@ -67,20 +73,20 @@ if (import.meta.main) {
 
   for (let i = 0; i < limit; i++) {
     const t = histogram.startTimer({ chainId: chainInfo.chainId });
-    let result;
-    let timeoutReached = false;
     try {
-      result = await Promise.race([
+      const timeoutPromise: Promise<never> = new Promise((_, reject) =>
+        setTimeout(() => reject(new TimeoutError()), config.timeout_time_seconds * 1000)
+      );
+      const result = await Promise.race([
         pingpong(config),
-        new Promise((_, reject) =>
-          setTimeout(() => {
-            reject(new Error("Timeout"));
-          }, config.timeout_time_seconds * 1000)
-        ),
+        timeoutPromise,
       ]);
+
+      const { time, waitForBeaconTime, drandRound: _ } = result;
+      t();
+      const processingTime = time - waitForBeaconTime;
+      histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
     } catch (_err) {
-      // handle timeout error
-      timeoutReached = true;
       console.log(
         "Timeout after",
         config.timeout_time_seconds,
@@ -90,12 +96,7 @@ if (import.meta.main) {
       histogramProcessing.observe({ chainId: chainInfo.chainId }, inf_time);
       histogram.observe({ chainId: chainInfo.chainId }, inf_time);
     }
-    if (!timeoutReached) {
-      const { time, waitForBeaconTime, drandRound: _ } = result;
-      t();
-      const processingTime = time - waitForBeaconTime;
-      histogramProcessing.observe({ chainId: chainInfo.chainId }, processingTime);
-    }
+
     if (flags.mode == "loop") {
       console.log("sleeping for ", config.sleep_time_minutes, " minutes");
       await new Promise((resolve) => setTimeout(resolve, config.sleep_time_minutes * 60 * 1000));
