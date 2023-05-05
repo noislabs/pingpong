@@ -26,9 +26,9 @@ const pollTimeVerification = 350;
 const pollTimeDelivery = 1200;
 
 export interface PinpongResult {
-  /** e2e run time */
+  /** e2e run time in seconds */
   readonly time: number;
-  /** Time we waited for the beacon (included in `time`) */
+  /** Time we waited for the beacon (included in `time`) in seconds */
   readonly waitForBeaconTime: number;
   readonly jobId: string;
   readonly drandRound: number;

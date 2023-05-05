@@ -15,6 +15,8 @@ const flags = parse(Deno.args, {
 
 const port = 3001;
 
+const infTime = Number.MAX_SAFE_INTEGER;
+
 class TimeoutError extends Error {
   constructor() {
     super("Timeout reached");
@@ -69,8 +71,6 @@ if (import.meta.main) {
   const chainInfo = await getChainInfo(config.endpoint);
   debugLog(`Chain info: ${JSON.stringify(chainInfo)}`);
 
-  const inf_time = 3600;
-
   for (let i = 0; i < limit; i++) {
     const t = histogram.startTimer({ chainId: chainInfo.chainId });
     try {
@@ -93,8 +93,8 @@ if (import.meta.main) {
         " seconds, Setting prometheus elapsed time to 1 hour (+inf)",
       );
 
-      histogramProcessing.observe({ chainId: chainInfo.chainId }, inf_time);
-      histogram.observe({ chainId: chainInfo.chainId }, inf_time);
+      histogramProcessing.observe({ chainId: chainInfo.chainId }, infTime);
+      histogram.observe({ chainId: chainInfo.chainId }, infTime);
     }
 
     if (flags.mode == "loop") {
