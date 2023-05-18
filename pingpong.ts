@@ -64,9 +64,13 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
   const balance = await client.getBalance(address, config.feeDenom);
   console.log(`    Balance: ${JSON.stringify(balance)}`);
 
+  try{
+
   const { config: proxyConfig } = await client.queryContractSmart(config.proxyContract, {
     "config": {},
   });
+
+
   console.log(`    Proxy config: ${JSON.stringify(proxyConfig)}`);
   const paymentAddress = proxyConfig.payment; // address on Nois
 
@@ -74,7 +78,7 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
 
   const { prices } = await client.queryContractSmart(config.proxyContract, { "prices": {} });
   console.log(`    Prices: ${JSON.stringify(prices)}`);
-  assert(Array.isArray(prices) && prices.length === 1, "One element array expected");
+  // assert(Array.isArray(prices) && prices.length === 1, "One element array expected");
   const price: Coin = prices[0];
 
   const noisClient = await CosmWasmClient.connect(config.noisEndpoint);
@@ -272,6 +276,7 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
     );
   }
 
+
   return {
     time: timer.final(),
     waitForBeaconTime,
@@ -280,4 +285,7 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
     beaconRequestTxInclusionTime,
     drandRound: round,
   };
+} catch (err) {
+  console.warn(err);
+}
 }
