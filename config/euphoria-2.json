@@ -1,0 +1,15 @@
+{
+  "endpoint": "https://rpc.euphoria.aura.network:443",
+  "monitoringContract": "aura12srnnd43sq9600f9vlf4nhezewkassejruerm5dzyeprk2xervnsnyc3y9",
+  "proxyContract": "aura1y93tjc2znlyrxegyede47u0k2k64qyhg76c5e5l8fzzd6ym9c20qa9vjt2",
+  "mnemonic": "exile another monster skin patient drink despair mule baby meadow pencil casino",
+  "feeDenom": "ueaura",
+  "addressPrefix": "aura",
+  "gasPrice": "0.04ueaura",
+
+  "noisEndpoint": "https://nois-testnet-rpc.polkachu.com:443/",
+  "drandContract": "nois14xef285hz5cx5q9hh32p9nztu3cct4g44sxjgx3dmftt2tj2rweqkjextk",
+
+  "sleep_time_minutes": 1,
+  "timeout_time_seconds": 300
+}

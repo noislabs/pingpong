@@ -19,3 +19,12 @@ services:
     image: docker.io/noislabs/nois-pingpong:juno-public
     ports:
       - "19001:3001"
+  nois-pingpong-euphoria-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CONFIG_FILE: config/euphoria-2.json
+    image: docker.io/noislabs/nois-pingpong:euphoria-2
+    ports:
+      - "19002:3001"
