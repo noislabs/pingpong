@@ -6,6 +6,8 @@
   "feeDenom": "ujuno",
   "addressPrefix": "juno",
   "gasPrice": "0.025ujuno",
+  "BeaconPriceDenom": "ibc/1D9E14A1F00613ED39E4B8A8763A20C9BE5B5EA0198F2FE47EAE43CD91A0137B",
+
 
   "noisEndpoint": "https://rpc.cosmos.directory/nois",
   "drandContract": "nois19w26q6n44xqepduudfz2xls4pc5lltpn6rxu34g0jshxu3rdujzsj7dgu8",

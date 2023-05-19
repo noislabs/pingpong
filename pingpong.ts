@@ -78,7 +78,17 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
   const { prices } = await client.queryContractSmart(config.proxyContract, { "prices": {} });
   console.log(`    Prices: ${JSON.stringify(prices)}`);
   // assert(Array.isArray(prices) && prices.length === 1, "One element array expected");
-  const price: Coin = prices[0];
+  let price: Coin;
+
+if (typeof config.BeaconPriceDenom !== "undefined") {
+  price = prices.find(item => item.denom === config.BeaconPriceDenom);
+} else {
+  price = prices[0];
+}
+
+  console.log(price);
+
+
 
   const noisClient = await CosmWasmClient.connect(config.noisEndpoint);
   console.log(`Chain info (${await noisClient.getChainId()})`);

@@ -7,6 +7,8 @@ export interface Config {
   feeDenom: string;
   addressPrefix: string;
   gasPrice: string;
+  BeaconPriceDenom: string;
+
 
   // nois chain (Testnet 005)
   noisEndpoint: string;
