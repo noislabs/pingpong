@@ -64,7 +64,6 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
   const balance = await client.getBalance(address, config.feeDenom);
   console.log(`    Balance: ${JSON.stringify(balance)}`);
 
-  try{
 
   const { config: proxyConfig } = await client.queryContractSmart(config.proxyContract, {
     "config": {},
@@ -156,55 +155,37 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
     console.log(
       `    Publish time: ${publishTime.toISOString()}; Round: ${round}`,
     );
-    waitForBeaconTime = (publishTime.getTime() - Date.now()) / 1000;
-    console.log(
-      `    Sleeping until publish time is reached (${waitForBeaconTime.toFixed(1)}s) ...`,
-    );
-    await sleep(waitForBeaconTime * 1000);
-    console.log(
-      `    Published: %c${timer.timeAt(publishTime)}`,
-      "color: green",
-    );
-  }
 
-  console.log(`Beacon verification (Round ${round})`);
+// Begin Block 1
+console.log(`Drand - Drand check job start`);
+waitForBeaconTime = (publishTime.getTime() - Date.now()) / 1000;
+console.log(
+  `Drand - Sleeping until publish time is reached (${waitForBeaconTime.toFixed(1)}s) ...`,
+);
 
-  writeStdout("    Waiting for verification ");
-  while (true) {
-    const { beacon } = await noisClient.queryContractSmart(config.drandContract, {
-      "beacon": { round: round },
-    });
-    if (beacon) break;
-    else dot();
-    await sleep(pollTimeVerification);
-  }
+const block1Promise = sleep(waitForBeaconTime * 1000).then(() => {
   nl();
   console.log(
-    `    Verification: %c${timer.time()}`,
+    `Drand - Drand published: %c${timer.timeAt(publishTime)}`,
     "color: green",
   );
-  const verificationTxs = await noisClient.searchTx(
-    txQueryRound(config.drandContract, round),
-    undefined,
-  );
-  console.log(`    Submission transactions:`);
-  for (const tx of verificationTxs) {
-    // tx index missing (see https://github.com/cosmos/cosmjs/issues/1361)
-    console.log(
-      `    - Height: ${tx.height}; Tx index: ${null}; Tx: ${tx.hash}`,
-    );
-  }
+});
 
-  //Gateway
-  console.log(`Gateway: Enqueue job `);
+// End Block 1
 
-  writeStdout("    Waiting for gateway enqueue ");
+// Begin Block 2
+//Gateway
+console.log(`Gateway - Enqueue job start`);
+
+writeStdout("Gateway - Waiting for gateway enqueue ");
+const block2Promise = (async () => {
   while (true) {
     try {
       const { customers } = await noisClient.queryContractSmart(gatewayAddress, { "customers": {} });
       const beaconsNumberNew = customers.find(c => c.payment === paymentAddress)?.requested_beacons;
-      if (beaconsNumberNew>beaconsNumber) {
-        console.log(`gateway enqueued`)
+      if (beaconsNumberNew > beaconsNumber) {
+        nl();
+        console.log(`Gateway - gateway enqueued`)
         break;
       } else {
         dot();
@@ -214,21 +195,25 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
     }
     await sleep(pollTimeGateway);
   }
-  nl();
   console.log(
-    `    Gateway since beginning: %c${timer.time()}`,
+    `Gateway - Gateway since beginning: %c${timer.time()}`,
     "color: green",
   );
   waitForGatewayEnqueTime = timer.final() - beaconRequestTxInclusionTime;
 
   console.log(
-    `    Gateway since inclusion: %c${waitForGatewayEnqueTime}`,
+    `Gateway - Gateway since inclusion: %c${waitForGatewayEnqueTime}`,
     "color: green",
   );
+})();
 
-  console.log(`Deliver Beacon (${chainId})`);
-  let lifecycle2: JobLifecycleDelivery;
-  writeStdout("    Waiting for beacon delivery ");
+// End Block 2
+await Promise.all([block1Promise, block2Promise]);
+
+console.log(`Deliver Beacon (${chainId})`);
+let lifecycle2: JobLifecycleDelivery;
+writeStdout("    Waiting for beacon delivery ");
+const block3Promise = (async () => {
   while (true) {
     try {
       const delivery: GetJobDeliveryResponse = await client.queryContractSmart(
@@ -275,17 +260,20 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
       `    Block ${h}: ${info}`,
     );
   }
+})();
+
+await Promise.all([ block3Promise]);
+
+return {
+  time: timer.final(),
+  waitForBeaconTime,
+  jobId,
+  waitForGatewayEnqueTime,
+  beaconRequestTxInclusionTime,
+  drandRound: round,
+};
 
 
-  return {
-    time: timer.final(),
-    waitForBeaconTime,
-    jobId,
-    waitForGatewayEnqueTime,
-    beaconRequestTxInclusionTime,
-    drandRound: round,
-  };
-} catch (err) {
-  console.warn(err);
-}
-}
+
+
+}}
