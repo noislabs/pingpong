@@ -65,6 +65,8 @@ export async function timedPingpong(config: Config): Promise<"timed_out" | Pinpo
     timeoutPromise,
   ]);
 
+  assert(result !== "aborted", "pingpong must only abort after timeout resolved");
+
   if (result === "timed_out") {
     controller.abort();
   }
@@ -77,10 +79,11 @@ export async function timedPingpong(config: Config): Promise<"timed_out" | Pinpo
 export async function pingpong(
   config: Config,
   abortController: AbortController,
-): Promise<PinpongResult> {
+): Promise<"aborted" | PinpongResult> {
+  const isAborted = { aborted: false };
   const abortListener = ({ target: _ }: Event) => {
     abortController.signal.removeEventListener("abort", abortListener);
-    // TODO: do something clever
+    isAborted.aborted = true;
     console.warn("Pingpong aborted");
   };
   abortController.signal.addEventListener("abort", abortListener);
@@ -215,6 +218,7 @@ export async function pingpong(
   let lifecycle2: JobLifecycleDelivery;
   writeStdout("    Waiting for beacon delivery ");
   while (true) {
+    if (isAborted.aborted) return "aborted";
     try {
       const delivery: GetJobDeliveryResponse = await client.queryContractSmart(
         config.monitoringContract,
@@ -238,6 +242,8 @@ export async function pingpong(
     `    Delivery: %c${timer.time()}`,
     "color: green",
   );
+
+  if (isAborted.aborted) return "aborted";
 
   const tmClient = await Tendermint34Client.connect(config.endpoint);
 
