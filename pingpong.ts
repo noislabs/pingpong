@@ -126,9 +126,10 @@ export async function pingpong(
   console.log(`    Payment address: ${paymentAddress}`);
   console.log(`    Payment balance: ${printableCoin(paymentBalance)}`);
 
+  // Start timer after all the debug work is done
+  const timer = Timer.start();
   console.log(`Request Beacon (${chainId})`);
   const jobId = `Ping ${Math.random()}`;
-  const timer = Timer.start();
 
   const gas = 1.1; // calculateFee(260_000, gasPrice);
   const ok = await client.execute(

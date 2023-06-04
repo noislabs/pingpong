@@ -66,11 +66,10 @@ if (import.meta.main) {
   debugLog(`Chain info: ${JSON.stringify(chainInfo)}`);
 
   for (let i = 0; i < limit; i++) {
-    const e2eTimer = e2eHistogram.startTimer({ chainId: chainInfo.chainId });
     try {
       const result = await timedPingpong(config);
       if (result === "timed_out") {
-        console.log(
+        debugLog(
           `Timeout after ${config.timeout_time_seconds} seconds. Setting prometheus elapsed time to 1 hour (+inf)`,
         );
         processingHistogram.observe({ chainId: chainInfo.chainId }, infTime);
@@ -79,7 +78,8 @@ if (import.meta.main) {
         const { time, waitForBeaconTime, drandRound: _ } = result;
         const processingTime = time - waitForBeaconTime;
         processingHistogram.observe({ chainId: chainInfo.chainId }, processingTime);
-        e2eTimer();
+        e2eHistogram.observe({ chainId: chainInfo.chainId }, time);
+        debugLog(`Success 🏓 E2E: ${time.toFixed(1)}s, Processing: ${processingTime.toFixed(1)}s`);
       }
     } catch (err) {
       // Some error, probably RPC things.
