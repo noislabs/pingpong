@@ -28,6 +28,8 @@ const pollTimeDelivery = 1200;
 export interface PinpongResult {
   /** e2e run time in seconds */
   readonly time: number;
+  /** Request beacon tx inclusion in seconds */
+  readonly inclusionTime: number;
   /** Time we waited for the beacon (included in `time`) in seconds */
   readonly waitForBeaconTime: number;
   readonly jobId: string;
@@ -148,9 +150,10 @@ export async function pingpong(
     `    Height: ${ok.height}; Gas: ${ok.gasUsed}/${ok.gasWanted}; Tx: ${ok.transactionHash}`,
   );
   console.log(
-    `    Inclusion: %c${timer.time()}`,
+    `    Request beacon tx inclusion: %c${timer.time()}`,
     "color: green",
   );
+  const requestBeaconTxInclusionTime = timer.lastTime();
 
   let requestHeight = Number.NaN;
   let round = Number.NaN;
@@ -247,6 +250,7 @@ export async function pingpong(
     `    Delivery: %c${timer.time()}`,
     "color: green",
   );
+  const e2eTime = timer.lastTime();
 
   if (isAborted.aborted) return "aborted";
 
@@ -273,7 +277,8 @@ export async function pingpong(
   }
 
   return {
-    time: timer.final(),
+    time: e2eTime,
+    inclusionTime: requestBeaconTxInclusionTime,
     waitForBeaconTime,
     jobId,
     drandRound: round,

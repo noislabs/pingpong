@@ -45,6 +45,13 @@ if (import.meta.main) {
     buckets: defaultBuckets,
   });
 
+  const requestBeaconTxInclusionHistogram = new promclient.Histogram({
+    name: "request_beacon_tx_inclusion",
+    help: "The time it takes the beacon request tx to be included in a block of the dapp chain",
+    labelNames: ["chainId"] as const,
+    buckets: defaultBuckets,
+  });
+
   const processingHistogram = new promclient.Histogram({
     name: "processing",
     help: "The time of an e2e test we did not spend on waiting for drand",
@@ -72,14 +79,23 @@ if (import.meta.main) {
         debugLog(
           `Timeout after ${config.timeout_time_seconds} seconds. Setting prometheus elapsed time to 1 hour (+inf)`,
         );
-        processingHistogram.observe({ chainId: chainInfo.chainId }, infTime);
         e2eHistogram.observe({ chainId: chainInfo.chainId }, infTime);
+        requestBeaconTxInclusionHistogram.observe({ chainId: chainInfo.chainId }, infTime);
+        processingHistogram.observe({ chainId: chainInfo.chainId }, infTime);
       } else {
-        const { time, waitForBeaconTime, drandRound: _ } = result;
+        const { time, inclusionTime, waitForBeaconTime, drandRound: _ } = result;
         const processingTime = time - waitForBeaconTime;
-        processingHistogram.observe({ chainId: chainInfo.chainId }, processingTime);
         e2eHistogram.observe({ chainId: chainInfo.chainId }, time);
-        debugLog(`Success 🏓 E2E: ${time.toFixed(1)}s, Processing: ${processingTime.toFixed(1)}s`);
+        requestBeaconTxInclusionHistogram.observe(
+          { chainId: chainInfo.chainId },
+          inclusionTime,
+        );
+        processingHistogram.observe({ chainId: chainInfo.chainId }, processingTime);
+        debugLog(
+          `Success 🏓 E2E: ${time.toFixed(1)}s, Inclusion: ${
+            inclusionTime.toFixed(1)
+          }s, Processing: ${processingTime.toFixed(1)}s`,
+        );
       }
     } catch (err) {
       // Some error, probably RPC things.
