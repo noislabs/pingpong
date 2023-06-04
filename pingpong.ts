@@ -43,7 +43,51 @@ function printableCoin(coin: Coin): string {
   }
 }
 
-export async function pingpong(config: Config): Promise<PinpongResult> {
+/**
+ * A wrapper around the pingpong function that adds a global timeout of the whole
+ * process.
+ *
+ * This function can lead to 3 results:
+ * - PinpongResult (i.e. success)
+ * - timeout
+ * - exception
+ */
+export async function timedPingpong(config: Config): Promise<"timed_out" | PinpongResult> {
+  const controller = new AbortController();
+  let timeoutId: number | undefined;
+
+  const timeoutPromise: Promise<"timed_out"> = new Promise((resolve, _reject) => {
+    timeoutId = setTimeout(() => resolve("timed_out"), config.timeout_time_seconds * 1000);
+  });
+
+  const result = await Promise.race([
+    pingpong(config, controller),
+    timeoutPromise,
+  ]);
+
+  assert(result !== "aborted", "pingpong must only abort after timeout resolved");
+
+  if (result === "timed_out") {
+    controller.abort();
+  }
+
+  clearTimeout(timeoutId);
+
+  return result;
+}
+
+export async function pingpong(
+  config: Config,
+  abortController: AbortController,
+): Promise<"aborted" | PinpongResult> {
+  const isAborted = { aborted: false };
+  const abortListener = ({ target: _ }: Event) => {
+    abortController.signal.removeEventListener("abort", abortListener);
+    isAborted.aborted = true;
+    console.warn("Pingpong aborted");
+  };
+  abortController.signal.addEventListener("abort", abortListener);
+
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(config.mnemonic, {
     prefix: config.addressPrefix,
   });
@@ -82,9 +126,10 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
   console.log(`    Payment address: ${paymentAddress}`);
   console.log(`    Payment balance: ${printableCoin(paymentBalance)}`);
 
+  // Start timer after all the debug work is done
+  const timer = Timer.start();
   console.log(`Request Beacon (${chainId})`);
   const jobId = `Ping ${Math.random()}`;
-  const timer = Timer.start();
 
   const gas = 1.1; // calculateFee(260_000, gasPrice);
   const ok = await client.execute(
@@ -174,6 +219,7 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
   let lifecycle2: JobLifecycleDelivery;
   writeStdout("    Waiting for beacon delivery ");
   while (true) {
+    if (isAborted.aborted) return "aborted";
     try {
       const delivery: GetJobDeliveryResponse = await client.queryContractSmart(
         config.monitoringContract,
@@ -197,6 +243,8 @@ export async function pingpong(config: Config): Promise<PinpongResult> {
     `    Delivery: %c${timer.time()}`,
     "color: green",
   );
+
+  if (isAborted.aborted) return "aborted";
 
   const tmClient = await Tendermint34Client.connect(config.endpoint);
 
