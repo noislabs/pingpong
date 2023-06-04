@@ -1,6 +1,7 @@
 import { parse } from "https://deno.land/std@0.171.0/flags/mod.ts";
 import * as promclient from "npm:prom-client";
 import express from "npm:express@4.18.2";
+import { sleep } from "npm:@cosmjs/utils";
 
 import { timedPingpong } from "./pingpong.ts";
 import { getChainInfo } from "./chain_info.ts";
@@ -88,8 +89,11 @@ if (import.meta.main) {
     }
 
     if (flags.mode == "loop") {
-      console.log("sleeping for ", config.sleep_time_minutes, " minutes");
-      await new Promise((resolve) => setTimeout(resolve, config.sleep_time_minutes * 60 * 1000));
+      console.log(
+        `Sleeping for %c${config.sleep_time_minutes} minutes ...`,
+        "color: yellow",
+      );
+      await sleep(config.sleep_time_minutes * 60 * 1000);
     }
   }
 
