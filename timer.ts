@@ -11,11 +11,19 @@ export class Timer {
     return new Timer(new Date(Date.now()));
   }
 
+  /**
+   * Stores the latest runtime.
+   * Returns a pretty formatted time.
+   */
   public time(): string {
     const now = new Date(Date.now());
     return this.timeAt(now);
   }
 
+  /**
+   * Stores the runtime between start and the given timestamp.
+   * Returns a pretty formatted time at the given timestamp.
+   */
   public timeAt(at: Date): string {
     const sinceBase = (at.getTime() - this.base.getTime()) / 1000; // seconds
     const sinceLast = (at.getTime() - this.last.getTime()) / 1000; // seconds
@@ -27,7 +35,7 @@ export class Timer {
   /**
    * Returns the time in seconds from start until the last time taken
    */
-  public final(): number {
+  public lastTime(): number {
     return (this.last.getTime() - this.base.getTime()) / 1000;
   }
 }
