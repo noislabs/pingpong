@@ -6,6 +6,7 @@ import { sleep } from "npm:@cosmjs/utils";
 import { timedPingpong } from "./pingpong.ts";
 import { getChainInfo } from "./chain_info.ts";
 import { debugLog } from "./console.ts";
+import { defaultBuckets } from "./buckets.ts";
 
 const flags = parse(Deno.args, {
   string: ["mode"],
@@ -41,16 +42,14 @@ if (import.meta.main) {
     name: "e2e",
     help: "End2end testing",
     labelNames: ["chainId"] as const,
-    // deno-fmt-ignore
-    buckets: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220, 240, 260, 280, 300],
+    buckets: defaultBuckets,
   });
 
   const processingHistogram = new promclient.Histogram({
     name: "processing",
     help: "The time of an e2e test we did not spend on waiting for drand",
     labelNames: ["chainId"] as const,
-    // deno-fmt-ignore
-    buckets: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220, 240, 260, 280, 300],
+    buckets: defaultBuckets,
   });
 
   // deno-lint-ignore no-explicit-any
