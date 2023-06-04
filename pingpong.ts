@@ -114,8 +114,12 @@ export async function pingpong(
 
   const { prices } = await client.queryContractSmart(config.proxyContract, { "prices": {} });
   console.log(`    Prices: ${JSON.stringify(prices)}`);
-  assert(Array.isArray(prices) && prices.length === 1, "One element array expected");
-  const price: Coin = prices[0];
+  assert(Array.isArray(prices) && prices.length >= 1, "Array with at last one option expected");
+
+  const price: Coin | undefined = config.priceDenom
+    ? prices.find((item) => item.denom === config.priceDenom)
+    : prices[0];
+  assert(price, "No suitable price option found");
 
   const noisClient = await CosmWasmClient.connect(config.noisEndpoint);
   console.log(`Chain info (${await noisClient.getChainId()})`);

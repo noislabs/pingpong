@@ -6,6 +6,7 @@
   "feeDenom": "ujunox",
   "addressPrefix": "juno",
   "gasPrice": "0.025ujunox",
+  "priceDenom": null,
 
   "noisEndpoint": "https://nois-testnet-rpc.polkachu.com:443/",
   "drandContract": "nois14xef285hz5cx5q9hh32p9nztu3cct4g44sxjgx3dmftt2tj2rweqkjextk",
