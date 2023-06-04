@@ -43,7 +43,48 @@ function printableCoin(coin: Coin): string {
   }
 }
 
-export async function pingpong(config: Config): Promise<PinpongResult> {
+/**
+ * A wrapper around the pingpong function that adds a global timeout of the whole
+ * process.
+ *
+ * This function can lead to 3 results:
+ * - PinpongResult (i.e. success)
+ * - timeout
+ * - exception
+ */
+export async function timedPingpong(config: Config): Promise<"timed_out" | PinpongResult> {
+  const controller = new AbortController();
+  let timeoutId: number | undefined;
+
+  const timeoutPromise: Promise<"timed_out"> = new Promise((resolve, _reject) => {
+    timeoutId = setTimeout(() => resolve("timed_out"), config.timeout_time_seconds * 1000);
+  });
+
+  const result = await Promise.race([
+    pingpong(config, controller),
+    timeoutPromise,
+  ]);
+
+  if (result === "timed_out") {
+    controller.abort();
+  }
+
+  clearTimeout(timeoutId);
+
+  return result;
+}
+
+export async function pingpong(
+  config: Config,
+  abortController: AbortController,
+): Promise<PinpongResult> {
+  const abortListener = ({ target: _ }: Event) => {
+    abortController.signal.removeEventListener("abort", abortListener);
+    // TODO: do something clever
+    console.warn("Pingpong aborted");
+  };
+  abortController.signal.addEventListener("abort", abortListener);
+
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(config.mnemonic, {
     prefix: config.addressPrefix,
   });
