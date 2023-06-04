@@ -3,6 +3,11 @@ export interface Config {
   endpoint: string;
   monitoringContract: string;
   proxyContract: string;
+  /**
+   * The denom in which the monitoring contract pays the proxy.
+   * If unset, the first option provided by the proxy will be used.
+   */
+  priceDenom?: string | null;
   mnemonic: string;
   feeDenom: string;
   addressPrefix: string;
