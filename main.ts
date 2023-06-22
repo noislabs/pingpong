@@ -52,8 +52,8 @@ if (import.meta.main) {
     buckets: defaultBuckets,
   });
 
-  const gatewayTxInclusionHistogram = new promclient.Histogram({
-    name: "gateway_tx_inclusion",
+  const requestBeaconRelayingHistogram = new promclient.Histogram({
+    name: "request_beacon_relaying",
     help: "The time it takes for the request beacon packet to be included on Nois",
     labelNames: ["chainId"] as const,
     buckets: defaultBuckets,
@@ -88,7 +88,7 @@ if (import.meta.main) {
         );
         e2eHistogram.observe({ chainId: chainInfo.chainId }, infTime);
         requestBeaconTxInclusionHistogram.observe({ chainId: chainInfo.chainId }, infTime);
-        gatewayTxInclusionHistogram.observe({ chainId: chainInfo.chainId }, infTime);
+        requestBeaconRelayingHistogram.observe({ chainId: chainInfo.chainId }, infTime);
         processingHistogram.observe({ chainId: chainInfo.chainId }, infTime);
       } else {
         const {
@@ -105,7 +105,7 @@ if (import.meta.main) {
           { chainId: chainInfo.chainId },
           inclusionTime,
         );
-        gatewayTxInclusionHistogram.observe(
+        requestBeaconRelayingHistogram.observe(
           { chainId: chainInfo.chainId },
           requestBeaconRelayingTime,
         );
