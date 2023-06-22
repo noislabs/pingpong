@@ -7,6 +7,18 @@ import { Config } from "./config.ts";
 export interface FoundRequest {
   height: number;
   tx_index: number;
+  queued: boolean;
+}
+
+interface RequestLogEntry {
+  origin: string;
+  tx: [number, number];
+  source_id: string;
+  queued: boolean;
+}
+
+interface RequestsLogResponse {
+  requests: Array<RequestLogEntry>;
 }
 
 export async function findRequest(
@@ -16,16 +28,18 @@ export async function findRequest(
 ): Promise<FoundRequest> {
   for (let run = 1; run < 1000; run += 1) {
     // console.log("Sending requests_log_desc query ...");
-    const { requests } = await noisClient.queryContractSmart(config.gatewayContract, {
-      "requests_log_desc": {
-        "channel_id": config.customer,
-        "offset": 0,
-        "limit": 5,
+    const { requests }: RequestsLogResponse = await noisClient.queryContractSmart(
+      config.gatewayContract,
+      {
+        "requests_log_desc": {
+          "channel_id": config.customer,
+          "offset": 0,
+          "limit": 5,
+        },
       },
-    });
+    );
     // console.log("Gateway requests:", requests);
-    // deno-lint-ignore no-explicit-any
-    const myRequest = requests.find((request: any) => {
+    const myRequest = requests.find((request) => {
       const origin = JSON.parse(fromUtf8(fromBase64(request.origin), true));
       return origin.job_id === jobId;
     });
@@ -35,10 +49,11 @@ export async function findRequest(
       return {
         height: myRequest.tx[0],
         tx_index: myRequest.tx[1],
+        queued: myRequest.queued,
       };
     }
 
-    const sleepTime = run < 10 ? 300 : run <= 100 ? 800 : 2000
+    const sleepTime = run < 10 ? 300 : run <= 100 ? 800 : 2000;
     await sleep(sleepTime);
   }
   throw new Error("Request not found. Giving up.");

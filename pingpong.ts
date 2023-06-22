@@ -32,7 +32,9 @@ export interface PinpongResult {
   /** Request beacon tx inclusion in seconds */
   readonly inclusionTime: number;
   /** Time between tx inclusion on the customer chain and the tx inclusion in the gateway */
-  readonly gatewayTxInclusionTime: number;
+  readonly requestBeaconRelayingTime: number;
+  /** If the job got queued. If false, it existed already. */
+  readonly queued: undefined | boolean;
   /** Time we waited for the beacon (included in `time`) in seconds */
   readonly waitForBeaconTime: number;
   readonly jobId: string;
@@ -158,14 +160,16 @@ export async function pingpong(
   );
   const requestBeaconTxInclusionTime = timer.lastTime();
 
-  let gatewayTxInclusionTime = Number.POSITIVE_INFINITY;
+  let requestBeaconRelayingTime = Number.POSITIVE_INFINITY;
+  let queued: undefined | boolean;
   const gatewayTimer = Timer.start();
-  findRequest(config, noisClient, jobId).then((_res) => {
+  findRequest(config, noisClient, jobId).then((res) => {
     console.log(
-      `Gateway request tx inclusion: %c${gatewayTimer.time()}`,
+      `RequestBeacon relaying time: %c${gatewayTimer.time()}`,
       "color: orange",
     );
-    gatewayTxInclusionTime = timer.lastTime();
+    requestBeaconRelayingTime = timer.lastTime();
+    queued = res.queued;
   }, (err) => console.error(err));
 
   let requestHeight = Number.NaN;
@@ -293,7 +297,8 @@ export async function pingpong(
   return {
     time: e2eTime,
     inclusionTime: requestBeaconTxInclusionTime,
-    gatewayTxInclusionTime,
+    requestBeaconRelayingTime,
+    queued,
     waitForBeaconTime,
     jobId,
     drandRound: round,

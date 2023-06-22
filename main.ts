@@ -91,19 +91,31 @@ if (import.meta.main) {
         gatewayTxInclusionHistogram.observe({ chainId: chainInfo.chainId }, infTime);
         processingHistogram.observe({ chainId: chainInfo.chainId }, infTime);
       } else {
-        const { time, inclusionTime, gatewayTxInclusionTime, waitForBeaconTime, drandRound: _ } = result;
+        const {
+          time,
+          inclusionTime,
+          requestBeaconRelayingTime,
+          queued: _queued,
+          waitForBeaconTime,
+          drandRound: _,
+        } = result;
         const processingTime = time - waitForBeaconTime;
         e2eHistogram.observe({ chainId: chainInfo.chainId }, time);
         requestBeaconTxInclusionHistogram.observe(
           { chainId: chainInfo.chainId },
           inclusionTime,
         );
-        gatewayTxInclusionHistogram.observe({ chainId: chainInfo.chainId }, gatewayTxInclusionTime);
+        gatewayTxInclusionHistogram.observe(
+          { chainId: chainInfo.chainId },
+          requestBeaconRelayingTime,
+        );
         processingHistogram.observe({ chainId: chainInfo.chainId }, processingTime);
         debugLog(
           `Success 🏓 E2E: ${time.toFixed(1)}s, Inclusion: ${
             inclusionTime.toFixed(1)
-          }s, Processing: ${processingTime.toFixed(1)}s`,
+          }s, RequestBeacon relaying: ${requestBeaconRelayingTime.toFixed(1)}s, Processing: ${
+            processingTime.toFixed(1)
+          }s`,
         );
       }
     } catch (err) {
