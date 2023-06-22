@@ -9,7 +9,9 @@
   "priceDenom": "ibc/1D9E14A1F00613ED39E4B8A8763A20C9BE5B5EA0198F2FE47EAE43CD91A0137B",
 
   "noisEndpoint": "https://rpc.cosmos.directory/nois",
+  "gatewayContract": "nois1acyc05v6fgcdgj88nmz2t40aex9nlnptqpwp5hf8hwg7rhce9uuqgqz5wp",
   "drandContract": "nois19w26q6n44xqepduudfz2xls4pc5lltpn6rxu34g0jshxu3rdujzsj7dgu8",
+  "customer": "channel-2",
 
   "sleep_time_minutes": 480,
   "timeout_time_seconds": 900

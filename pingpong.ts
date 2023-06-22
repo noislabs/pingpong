@@ -16,6 +16,7 @@ import { timeOfRound, validRoundAfter } from "./drand.ts";
 import { lastNBlocks, transactionHash } from "./blocks.ts";
 import { Timer } from "./timer.ts";
 import { dot, nl, writeStdout } from "./console.ts";
+import { findRequest } from "./gateway.ts";
 
 function timestampToDate(ts: string): Date {
   const millis = Decimal.fromAtomics(ts, 6).toFloatApproximation();
@@ -30,6 +31,8 @@ export interface PinpongResult {
   readonly time: number;
   /** Request beacon tx inclusion in seconds */
   readonly inclusionTime: number;
+  /** Time between tx inclusion on the customer chain and the tx inclusion in the gateway */
+  readonly gatewayTxInclusionTime: number;
   /** Time we waited for the beacon (included in `time`) in seconds */
   readonly waitForBeaconTime: number;
   readonly jobId: string;
@@ -155,6 +158,16 @@ export async function pingpong(
   );
   const requestBeaconTxInclusionTime = timer.lastTime();
 
+  let gatewayTxInclusionTime = Number.POSITIVE_INFINITY;
+  const gatewayTimer = Timer.start();
+  findRequest(config, noisClient, jobId).then((_res) => {
+    console.log(
+      `Gateway request tx inclusion: %c${gatewayTimer.time()}`,
+      "color: orange",
+    );
+    gatewayTxInclusionTime = timer.lastTime();
+  }, (err) => console.error(err));
+
   let requestHeight = Number.NaN;
   let round = Number.NaN;
   let waitForBeaconTime = Number.NaN;
@@ -184,6 +197,7 @@ export async function pingpong(
     console.log(
       `    Publish time: ${publishTime.toISOString()}; Round: ${round}`,
     );
+
     waitForBeaconTime = (publishTime.getTime() - Date.now()) / 1000;
     console.log(
       `    Sleeping until publish time is reached (${waitForBeaconTime.toFixed(1)}s) ...`,
@@ -279,6 +293,7 @@ export async function pingpong(
   return {
     time: e2eTime,
     inclusionTime: requestBeaconTxInclusionTime,
+    gatewayTxInclusionTime,
     waitForBeaconTime,
     jobId,
     drandRound: round,
