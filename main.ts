@@ -52,6 +52,13 @@ if (import.meta.main) {
     buckets: defaultBuckets,
   });
 
+  const requestBeaconRelayingHistogram = new promclient.Histogram({
+    name: "request_beacon_relaying",
+    help: "The time it takes for the request beacon packet to be included on Nois",
+    labelNames: ["chainId"] as const,
+    buckets: defaultBuckets,
+  });
+
   const processingHistogram = new promclient.Histogram({
     name: "processing",
     help: "The time of an e2e test we did not spend on waiting for drand",
@@ -81,20 +88,34 @@ if (import.meta.main) {
         );
         e2eHistogram.observe({ chainId: chainInfo.chainId }, infTime);
         requestBeaconTxInclusionHistogram.observe({ chainId: chainInfo.chainId }, infTime);
+        requestBeaconRelayingHistogram.observe({ chainId: chainInfo.chainId }, infTime);
         processingHistogram.observe({ chainId: chainInfo.chainId }, infTime);
       } else {
-        const { time, inclusionTime, waitForBeaconTime, drandRound: _ } = result;
+        const {
+          time,
+          inclusionTime,
+          requestBeaconRelayingTime,
+          queued: _queued,
+          waitForBeaconTime,
+          drandRound: _,
+        } = result;
         const processingTime = time - waitForBeaconTime;
         e2eHistogram.observe({ chainId: chainInfo.chainId }, time);
         requestBeaconTxInclusionHistogram.observe(
           { chainId: chainInfo.chainId },
           inclusionTime,
         );
+        requestBeaconRelayingHistogram.observe(
+          { chainId: chainInfo.chainId },
+          requestBeaconRelayingTime,
+        );
         processingHistogram.observe({ chainId: chainInfo.chainId }, processingTime);
         debugLog(
           `Success 🏓 E2E: ${time.toFixed(1)}s, Inclusion: ${
             inclusionTime.toFixed(1)
-          }s, Processing: ${processingTime.toFixed(1)}s`,
+          }s, RequestBeacon relaying: ${requestBeaconRelayingTime.toFixed(1)}s, Processing: ${
+            processingTime.toFixed(1)
+          }s`,
         );
       }
     } catch (err) {

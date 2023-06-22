@@ -9,7 +9,9 @@
   "priceDenom": null,
 
   "noisEndpoint": "https://nois-testnet-rpc.polkachu.com:443/",
+  "gatewayContract": "nois1xwde9rzqk5u36fke0r9ddmtwvh43n4fv53c5vc462wz8xlnqjhls6d90xc",
   "drandContract": "nois14xef285hz5cx5q9hh32p9nztu3cct4g44sxjgx3dmftt2tj2rweqkjextk",
+  "customer": "channel-17",
 
   "sleep_time_minutes": 0.5,
   "timeout_time_seconds": 300
