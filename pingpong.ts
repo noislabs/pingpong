@@ -10,7 +10,6 @@ import {
   GetJobDeliveryResponse,
   GetJobRequestResponse,
   JobLifecycleDelivery,
-  txQueryRound,
 } from "./monitoring.ts";
 import { timeOfRound, validRoundAfter } from "./drand.ts";
 import { lastNBlocks, transactionHash } from "./blocks.ts";
@@ -230,8 +229,16 @@ export async function pingpong(
     "color: green",
   );
   const verificationTxs = await noisClient.searchTx(
-    txQueryRound(config.drandContract, round),
-    undefined,
+    [
+      {
+        key: "wasm._contract_address",
+        value: config.drandContract,
+      },
+      {
+        key: "wasm.round",
+        value: round.toString(),
+      },
+    ],
   );
   console.log(`    Submission transactions:`);
   for (const tx of verificationTxs) {
