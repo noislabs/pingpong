@@ -24,7 +24,7 @@ if (import.meta.main) {
     assert: { type: "json" },
   });
 
-  const app = express();
+  const metricsApp = express();
 
   let limit: number;
   switch (flags.mode) {
@@ -67,13 +67,13 @@ if (import.meta.main) {
   });
 
   // deno-lint-ignore no-explicit-any
-  app.get("/metrics", (_req: any, res: any) => {
+  metricsApp.get("/metrics", (_req: any, res: any) => {
     res.set("Content-Type", promclient.register.contentType);
     promclient.register.metrics().then((metrics) => res.end(metrics));
   });
 
-  const server = app.listen(port, function () {
-    debugLog(`Listening on port ${port} ...`);
+  const metricsServer = metricsApp.listen(port, function () {
+    debugLog(`Metrics server listening on port ${port} ...`);
   });
 
   const chainInfo = await getChainInfo(config.endpoint);
@@ -134,5 +134,5 @@ if (import.meta.main) {
   }
 
   debugLog("Closing metrics server...");
-  server.close();
+  metricsServer.close();
 }
