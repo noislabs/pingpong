@@ -5,7 +5,7 @@ import { sleep } from "npm:@cosmjs/utils";
 import { timedPingpong } from "./pingpong.ts";
 import { getChainInfo } from "./chain_info.ts";
 import { debugLog } from "./console.ts";
-import { makePingpongCounters } from "./counters.ts";
+import { makePingpongCounters, makeQueuedCounters } from "./counters.ts";
 import { promclient } from "./deps.ts";
 import { defaultBuckets, smallBuckets } from "./buckets.ts";
 
@@ -68,6 +68,7 @@ if (import.meta.main) {
   });
 
   const pingpongCounters = makePingpongCounters();
+  const queuedCounters = makeQueuedCounters();
 
   // deno-lint-ignore no-explicit-any
   metricsApp.get("/metrics", (_req: any, res: any) => {
@@ -99,7 +100,7 @@ if (import.meta.main) {
           time,
           inclusionTime,
           requestBeaconRelayingTime,
-          queued: _queued,
+          queued,
           waitForBeaconTime,
           drandRound: _,
         } = result;
@@ -115,6 +116,8 @@ if (import.meta.main) {
         );
         processingHistogram.observe({ chainId: chainInfo.chainId }, processingTime);
         pingpongCounters.success.inc({ chainId: chainInfo.chainId });
+        if (queued) queuedCounters.queued.inc({ chainId: chainInfo.chainId });
+        else queuedCounters.notQueued.inc({ chainId: chainInfo.chainId });
         debugLog(
           `Success 🏓 E2E: ${time.toFixed(1)}s, Inclusion: ${
             inclusionTime.toFixed(1)

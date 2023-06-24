@@ -21,3 +21,19 @@ export function makePingpongCounters() {
     }),
   };
 }
+
+/** Job queued counters. For each successful run, one of the counters is incremented. */
+export function makeQueuedCounters() {
+  return {
+    queued: new promclient.Counter({
+      name: "jobs_queued",
+      help: "Number of jobs queued in gateway. I.e. when the randomness is not yet available.",
+      labelNames: ["chainId"] as const,
+    }),
+    notQueued: new promclient.Counter({
+      name: "jobs_not_queued",
+      help: "Number of jobs not queued in gateway. I.e. when the randomness is available.",
+      labelNames: ["chainId"] as const,
+    }),
+  };
+}
