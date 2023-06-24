@@ -1,11 +1,12 @@
 import { parse } from "https://deno.land/std@0.171.0/flags/mod.ts";
-import * as promclient from "npm:prom-client";
 import express from "npm:express@4.18.2";
 import { sleep } from "npm:@cosmjs/utils";
 
 import { timedPingpong } from "./pingpong.ts";
 import { getChainInfo } from "./chain_info.ts";
 import { debugLog } from "./console.ts";
+import { makePingpongCounters } from "./counters.ts";
+import { promclient } from "./deps.ts";
 import { defaultBuckets, smallBuckets } from "./buckets.ts";
 
 const flags = parse(Deno.args, {
@@ -66,6 +67,8 @@ if (import.meta.main) {
     buckets: defaultBuckets,
   });
 
+  const pingpongCounters = makePingpongCounters();
+
   // deno-lint-ignore no-explicit-any
   metricsApp.get("/metrics", (_req: any, res: any) => {
     res.set("Content-Type", promclient.register.contentType);
@@ -90,6 +93,7 @@ if (import.meta.main) {
         requestBeaconTxInclusionHistogram.observe({ chainId: chainInfo.chainId }, infTime);
         requestBeaconRelayingHistogram.observe({ chainId: chainInfo.chainId }, infTime);
         processingHistogram.observe({ chainId: chainInfo.chainId }, infTime);
+        pingpongCounters.timeout.inc({ chainId: chainInfo.chainId });
       } else {
         const {
           time,
@@ -110,6 +114,7 @@ if (import.meta.main) {
           requestBeaconRelayingTime,
         );
         processingHistogram.observe({ chainId: chainInfo.chainId }, processingTime);
+        pingpongCounters.success.inc({ chainId: chainInfo.chainId });
         debugLog(
           `Success 🏓 E2E: ${time.toFixed(1)}s, Inclusion: ${
             inclusionTime.toFixed(1)
@@ -121,6 +126,7 @@ if (import.meta.main) {
     } catch (err) {
       // Some error, probably RPC things.
       // Neither e2eHistogram nor processingHistogram observe here.
+      pingpongCounters.error.inc({ chainId: chainInfo.chainId });
       console.error(err);
     }
 
