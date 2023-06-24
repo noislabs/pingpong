@@ -24,7 +24,7 @@ if (import.meta.main) {
     assert: { type: "json" },
   });
 
-  const app = express();
+  const metricsApp = express();
 
   let limit: number;
   switch (flags.mode) {
@@ -67,13 +67,13 @@ if (import.meta.main) {
   });
 
   // deno-lint-ignore no-explicit-any
-  app.get("/metrics", (_req: any, res: any) => {
+  metricsApp.get("/metrics", (_req: any, res: any) => {
     res.set("Content-Type", promclient.register.contentType);
     promclient.register.metrics().then((metrics) => res.end(metrics));
   });
 
-  const server = app.listen(port, function () {
-    debugLog(`Listening on port ${port} ...`);
+  const metricsServer = metricsApp.listen(port, function () {
+    debugLog(`Metrics server listening on port ${port} ...`);
   });
 
   const chainInfo = await getChainInfo(config.endpoint);
@@ -125,14 +125,17 @@ if (import.meta.main) {
     }
 
     if (flags.mode == "loop") {
+      const randomSeconds = Math.random() * 30; // 0-30 seconds
       console.log(
-        `Sleeping for %c${config.sleep_time_minutes} minutes ...`,
+        `Sleeping for %c${config.sleep_time_minutes}min plus ${randomSeconds.toFixed(1)}sec%c ...`,
         "color: yellow",
+        "",
       );
-      await sleep(config.sleep_time_minutes * 60 * 1000);
+      const sleepSeconds = config.sleep_time_minutes * 60 + randomSeconds;
+      await sleep(sleepSeconds * 1000);
     }
   }
 
   debugLog("Closing metrics server...");
-  server.close();
+  metricsServer.close();
 }
