@@ -6,7 +6,7 @@ import { sleep } from "npm:@cosmjs/utils";
 import { timedPingpong } from "./pingpong.ts";
 import { getChainInfo } from "./chain_info.ts";
 import { debugLog } from "./console.ts";
-import { defaultBuckets } from "./buckets.ts";
+import { defaultBuckets, smallBuckets } from "./buckets.ts";
 
 const flags = parse(Deno.args, {
   string: ["mode"],
@@ -49,14 +49,14 @@ if (import.meta.main) {
     name: "request_beacon_tx_inclusion",
     help: "The time it takes the beacon request tx to be included in a block of the dapp chain",
     labelNames: ["chainId"] as const,
-    buckets: defaultBuckets,
+    buckets: smallBuckets,
   });
 
   const requestBeaconRelayingHistogram = new promclient.Histogram({
     name: "request_beacon_relaying",
     help: "The time it takes for the request beacon packet to be included on Nois",
     labelNames: ["chainId"] as const,
-    buckets: defaultBuckets,
+    buckets: smallBuckets,
   });
 
   const processingHistogram = new promclient.Histogram({
