@@ -125,11 +125,14 @@ if (import.meta.main) {
     }
 
     if (flags.mode == "loop") {
+      const randomSeconds = Math.random() * 30; // 0-30 seconds
       console.log(
-        `Sleeping for %c${config.sleep_time_minutes} minutes ...`,
+        `Sleeping for %c${config.sleep_time_minutes}min plus ${randomSeconds.toFixed(1)}sec%c ...`,
         "color: yellow",
+        "",
       );
-      await sleep(config.sleep_time_minutes * 60 * 1000);
+      const sleepSeconds = config.sleep_time_minutes * 60 + randomSeconds;
+      await sleep(sleepSeconds * 1000);
     }
   }
 
