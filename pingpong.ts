@@ -101,24 +101,32 @@ export async function pingpong(
   console.log("Wallet");
   console.log(`    Address: ${address}`);
 
-  const client = await SigningCosmWasmClient.connectWithSigner(
+  const consumerChainClient = await SigningCosmWasmClient.connectWithSigner(
     config.endpoint,
     wallet,
-    { gasPrice: GasPrice.fromString(config.gasPrice) },
+    {
+      gasPrice: GasPrice.fromString(config.gasPrice),
+      broadcastPollIntervalMs: 1_234, // check block inclusion more often than the default 3s to get more precise results
+    },
   );
-  const chainId = await client.getChainId();
+  const chainId = await consumerChainClient.getChainId();
   console.log(`Chain info (${chainId})`);
-  const balance = await client.getBalance(address, config.feeDenom);
+  const balance = await consumerChainClient.getBalance(address, config.feeDenom);
   console.log(`    Balance: ${JSON.stringify(balance)}`);
 
-  const { config: proxyConfig } = await client.queryContractSmart(config.proxyContract, {
-    "config": {},
-  });
+  const { config: proxyConfig } = await consumerChainClient.queryContractSmart(
+    config.proxyContract,
+    {
+      "config": {},
+    },
+  );
   console.log(`    Proxy config: ${JSON.stringify(proxyConfig)}`);
   const paymentAddress = proxyConfig.payment; // address on Nois
   assert(typeof paymentAddress === "string", "Missing payment address");
 
-  const { prices } = await client.queryContractSmart(config.proxyContract, { "prices": {} });
+  const { prices } = await consumerChainClient.queryContractSmart(config.proxyContract, {
+    "prices": {},
+  });
   console.log(`    Prices: ${JSON.stringify(prices)}`);
   assert(Array.isArray(prices) && prices.length >= 1, "Array with at last one option expected");
 
@@ -142,7 +150,7 @@ export async function pingpong(
   const jobId = `Ping ${Math.random()}`;
 
   const gas = 1.1; // calculateFee(260_000, gasPrice);
-  const ok = await client.execute(
+  const ok = await consumerChainClient.execute(
     address,
     config.monitoringContract,
     { "roll_dice": { "job_id": jobId } },
@@ -174,7 +182,7 @@ export async function pingpong(
   let requestHeight = Number.NaN;
   let round = Number.NaN;
   let waitForBeaconTime = Number.NaN;
-  const lifecycle1: GetJobRequestResponse = await client.queryContractSmart(
+  const lifecycle1: GetJobRequestResponse = await consumerChainClient.queryContractSmart(
     config.monitoringContract,
     {
       "get_request": { "job_id": jobId },
@@ -253,7 +261,7 @@ export async function pingpong(
   while (true) {
     if (isAborted.aborted) return "aborted";
     try {
-      const delivery: GetJobDeliveryResponse = await client.queryContractSmart(
+      const delivery: GetJobDeliveryResponse = await consumerChainClient.queryContractSmart(
         config.monitoringContract,
         {
           "get_delivery": { "job_id": jobId },
