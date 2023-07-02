@@ -1,4 +1,5 @@
-FROM denoland/deno:alpine
+# See https://hub.docker.com/r/denoland/deno/tags for available images
+FROM denoland/deno:alpine-1.34.3
 
 ARG CONFIG_FILE=config/testnet.json
 COPY . /opt/pingpong
