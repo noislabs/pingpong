@@ -77,7 +77,7 @@ if (import.meta.main) {
   });
 
   const metricsServer = metricsApp.listen(port, function () {
-    debugLog(`Metrics server listening on port ${port} ...`);
+    debugLog(`Metrics server listening on port ${port}. See http://localhost:${port}/metrics.`);
   });
 
   const chainInfo = await getChainInfo(config.endpoint);
