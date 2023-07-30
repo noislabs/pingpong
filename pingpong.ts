@@ -73,7 +73,10 @@ async function connectTendermint(endpoint: string): Promise<TendermintClient> {
  * - timeout
  * - exception
  */
-export async function timedPingpong(config: Config, secrets: Secrets): Promise<"timed_out" | PinpongResult> {
+export async function timedPingpong(
+  config: Config,
+  secrets: Secrets,
+): Promise<"timed_out" | PinpongResult> {
   const controller = new AbortController();
   let timeoutId: number | undefined;
 

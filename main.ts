@@ -24,7 +24,6 @@ if (import.meta.main) {
   const configPath = "./config.json";
   const secretsPath = "./secrets.json";
 
-
   const { default: secrets } = await import(secretsPath, {
     assert: { type: "json" },
   });
