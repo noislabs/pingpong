@@ -10,7 +10,6 @@ export interface Config {
    * If unset, the first option provided by the proxy will be used.
    */
   priceDenom?: string | null;
-  mnemonic: string;
   feeDenom: string;
   addressPrefix: string;
   gasPrice: string;
@@ -26,4 +25,9 @@ export interface Config {
 
   sleep_time_minutes: number;
   timeout_time_seconds: number;
+}
+
+export interface Secrets {
+  // mnemonics
+  mnemonic: string;
 }

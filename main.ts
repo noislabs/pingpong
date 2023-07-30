@@ -23,25 +23,15 @@ const infTime = Number.MAX_SAFE_INTEGER;
 if (import.meta.main) {
   const configPath = "./config.json";
   const secretsPath = "./secrets.json";
-  let configMnemonicFallback = null;
 
-  try {
-    const { default: secrets } = await import(secretsPath, {
-      assert: { type: "json" },
-    });
-    configMnemonicFallback = secrets.mnemonic;
-  } catch (error) {
-    // Handle the case when secrets.json is not found or cannot be imported
-  }
+
+  const { default: secrets } = await import(secretsPath, {
+    assert: { type: "json" },
+  });
 
   const { default: config } = await import(configPath, {
     assert: { type: "json" },
   });
-
-  if (configMnemonicFallback && typeof configMnemonicFallback === "string") {
-    // If secrets.json exists and contains a valid mnemonic, use it as fallback.
-    config.mnemonic = configMnemonicFallback;
-  }
 
   const metricsApp = express();
 
@@ -103,7 +93,7 @@ if (import.meta.main) {
 
   for (let i = 0; i < limit; i++) {
     try {
-      const result = await timedPingpong(config);
+      const result = await timedPingpong(config, secrets);
       if (result === "timed_out") {
         debugLog(
           `Timeout after ${config.timeout_time_seconds} seconds. Setting prometheus elapsed time to 1 hour (+inf)`,
