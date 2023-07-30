@@ -3,7 +3,7 @@ FROM denoland/deno:alpine-1.34.3
 
 #These values are overriden in docker-compose.yaml
 ARG CONFIG_FILE=config/uni-6/config.json
-ARG SECRETS_FILE=config/uni-6/secrets.json
+ARG SECRETS_FILE=secrets_template.json
 
 COPY . /opt/pingpong
 WORKDIR /opt/pingpong
