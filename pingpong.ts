@@ -2,10 +2,10 @@ import { CosmWasmClient, SigningCosmWasmClient } from "npm:@cosmjs/cosmwasm-star
 import { Coin, DirectSecp256k1HdWallet } from "npm:@cosmjs/proto-signing";
 import { assert, sleep } from "npm:@cosmjs/utils";
 import { Decimal } from "npm:@cosmjs/math";
-import { Tendermint34Client } from "npm:@cosmjs/tendermint-rpc";
 import { GasPrice } from "npm:@cosmjs/stargate";
 
 import { Config } from "./config.ts";
+import { Tendermint34Client, Tendermint37Client, TendermintClient } from "./deps.ts";
 import {
   GetJobDeliveryResponse,
   GetJobRequestResponse,
@@ -47,6 +47,21 @@ function printableCoin(coin: Coin): string {
   } else {
     return coin.amount + coin.denom;
   }
+}
+
+async function connectTendermint(endpoint: string): Promise<TendermintClient> {
+  // Tendermint/CometBFT 0.34/0.37 auto-detection. Starting with 0.37 we seem to get reliable versions again 🎉
+  // Using 0.34 as the fallback.
+  let tmClient: TendermintClient;
+  const tm37Client = await Tendermint37Client.connect(endpoint);
+  const version = (await tm37Client.status()).nodeInfo.version;
+  if (version.startsWith("0.37.")) {
+    tmClient = tm37Client;
+  } else {
+    tm37Client.disconnect();
+    tmClient = await Tendermint34Client.connect(endpoint);
+  }
+  return tmClient;
 }
 
 /**
@@ -287,7 +302,7 @@ export async function pingpong(
 
   if (isAborted.aborted) return "aborted";
 
-  const tmClient = await Tendermint34Client.connect(config.endpoint);
+  const tmClient = await connectTendermint(config.endpoint);
 
   const { height, tx_index } = lifecycle2;
   const hash = typeof tx_index == "number"
