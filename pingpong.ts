@@ -4,7 +4,7 @@ import { assert, sleep } from "npm:@cosmjs/utils";
 import { Decimal } from "npm:@cosmjs/math";
 import { GasPrice } from "npm:@cosmjs/stargate";
 
-import { Config } from "./config.ts";
+import { Config, Secrets } from "./config.ts";
 import { Tendermint34Client, Tendermint37Client, TendermintClient } from "./deps.ts";
 import {
   GetJobDeliveryResponse,
@@ -73,7 +73,10 @@ async function connectTendermint(endpoint: string): Promise<TendermintClient> {
  * - timeout
  * - exception
  */
-export async function timedPingpong(config: Config): Promise<"timed_out" | PinpongResult> {
+export async function timedPingpong(
+  config: Config,
+  secrets: Secrets,
+): Promise<"timed_out" | PinpongResult> {
   const controller = new AbortController();
   let timeoutId: number | undefined;
 
@@ -82,7 +85,7 @@ export async function timedPingpong(config: Config): Promise<"timed_out" | Pinpo
   });
 
   const result = await Promise.race([
-    pingpong(config, controller),
+    pingpong(config, secrets, controller),
     timeoutPromise,
   ]);
 
@@ -99,6 +102,7 @@ export async function timedPingpong(config: Config): Promise<"timed_out" | Pinpo
 
 export async function pingpong(
   config: Config,
+  secrets: Secrets,
   abortController: AbortController,
 ): Promise<"aborted" | PinpongResult> {
   const isAborted = { aborted: false };
@@ -109,7 +113,7 @@ export async function pingpong(
   };
   abortController.signal.addEventListener("abort", abortListener);
 
-  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(config.mnemonic, {
+  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(secrets.mnemonic, {
     prefix: config.addressPrefix,
   });
   const address = (await wallet.getAccounts())[0].address;

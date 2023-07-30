@@ -6,16 +6,18 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        CONFIG_FILE: config/testnet.json
+        CONFIG_FILE: config/uni-6/config.json
+        SECRETS_FILE: config/uni-6/secrets.json
     image: docker.io/noislabs/nois-pingpong:testnet
     ports:
       - "19000:3001"
-  nois-pingpong-juno-public:
+  nois-pingpong-juno:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        CONFIG_FILE: config/juno-public.json
-    image: docker.io/noislabs/nois-pingpong:juno-public
+        CONFIG_FILE: config/juno/config.json
+        SECRETS_FILE: config/juno/secrets.json
+    image: docker.io/noislabs/nois-pingpong:juno
     ports:
       - "19001:3001"

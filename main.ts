@@ -21,7 +21,14 @@ const port = 3001;
 const infTime = Number.MAX_SAFE_INTEGER;
 
 if (import.meta.main) {
-  const { default: config } = await import("./config.json", {
+  const configPath = "./config.json";
+  const secretsPath = "./secrets.json";
+
+  const { default: secrets } = await import(secretsPath, {
+    assert: { type: "json" },
+  });
+
+  const { default: config } = await import(configPath, {
     assert: { type: "json" },
   });
 
@@ -85,7 +92,7 @@ if (import.meta.main) {
 
   for (let i = 0; i < limit; i++) {
     try {
-      const result = await timedPingpong(config);
+      const result = await timedPingpong(config, secrets);
       if (result === "timed_out") {
         debugLog(
           `Timeout after ${config.timeout_time_seconds} seconds. Setting prometheus elapsed time to 1 hour (+inf)`,
