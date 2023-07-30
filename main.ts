@@ -21,9 +21,27 @@ const port = 3001;
 const infTime = Number.MAX_SAFE_INTEGER;
 
 if (import.meta.main) {
-  const { default: config } = await import("./config.json", {
+  const configPath = "./config.json";
+  const secretsPath = "./secrets.json";
+  let configMnemonicFallback = null;
+
+  try {
+    const { default: secrets } = await import(secretsPath, {
+      assert: { type: "json" },
+    });
+    configMnemonicFallback = secrets.mnemonic;
+  } catch (error) {
+    // Handle the case when secrets.json is not found or cannot be imported
+  }
+
+  const { default: config } = await import(configPath, {
     assert: { type: "json" },
   });
+
+  if (configMnemonicFallback && typeof configMnemonicFallback === "string") {
+    // If secrets.json exists and contains a valid mnemonic, use it as fallback.
+    config.mnemonic = configMnemonicFallback;
+  }
 
   const metricsApp = express();
 
