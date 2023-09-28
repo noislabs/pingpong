@@ -1,5 +1,5 @@
 # See https://hub.docker.com/r/denoland/deno/tags for available images
-FROM denoland/deno:alpine-1.34.3
+FROM denoland/deno:alpine-1.37.0
 
 #These values are overriden in docker-compose.yaml
 ARG CONFIG_FILE=config/uni-6/config.json
