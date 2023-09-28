@@ -18,17 +18,12 @@ function roundAfter(base: Date): number {
   }
 }
 
-/// Returns the next round after the timestamp which can be divided by the divisor.
-function roundAfterDivisor(base: Date, divisor: number): number {
-  const round = roundAfter(base);
-  const remainder = round % divisor;
-  if (remainder != 0) {
-    return round + divisor - remainder;
-  } else {
-    return round;
-  }
-}
-
-export function validRoundAfter(base: Date): number {
-  return roundAfterDivisor(base, 10);
+/**
+ * Calculates the round which the gateway contract will commit to for the
+ * given `after` value. In an ideal world we'd not need this function here
+ * but could just read it from the content of the IBC acknowledegement but
+ * for now this is easier.
+ */
+export function validRoundAfter(after: Date): number {
+  return roundAfter(after);
 }
