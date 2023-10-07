@@ -21,5 +21,11 @@ jobs:
         uses: denolib/setup-deno@v2
         with:
           deno-version: ${{ matrix.deno-version }}
+      - name: Check types
+        run: |
+          deno check main.ts
+          deno check *_test.ts
       - name: Check formatting
         run: deno fmt --check
+      - name: Test
+        run: deno test
