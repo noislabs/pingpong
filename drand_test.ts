@@ -25,4 +25,12 @@ Deno.test("roundAfter works", () => {
   assertEquals(round, 3);
   round = roundAfter((BigInt(1677685200) + 4n) * 1_000_000_000n);
   assertEquals(round, 3);
+
+  // Publish time of #893: 1677687876000000000
+  round = roundAfter(1677687876000000000n - 1n);
+  assertEquals(round, 893);
+  round = roundAfter(1677687876000000000n);
+  assertEquals(round, 894);
+  round = roundAfter(1677687876000000000n + 1n);
+  assertEquals(round, 894);
 });
