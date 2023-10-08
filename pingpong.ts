@@ -11,7 +11,7 @@ import {
   GetJobRequestResponse,
   JobLifecycleDelivery,
 } from "./monitoring.ts";
-import { timeOfRound, validRoundAfter } from "./drand.ts";
+import { roundAfter, timeOfRound } from "./drand.ts";
 import { lastNBlocks, transactionHash } from "./blocks.ts";
 import { Timer } from "./timer.ts";
 import { dot, nl, writeStdout } from "./console.ts";
@@ -217,11 +217,10 @@ export async function pingpong(
     console.log(
       `    Safety margin: ${(safety_margin / 1_000000000).toFixed(1)}s`,
     );
-    const a = timestampToDate(after);
-    round = validRoundAfter(a); // wie should get this from the ack instead of calculating it here
+    round = roundAfter(after); // wie should get this from the ack instead of calculating it here
     const publishTime = timeOfRound(round);
     console.log(
-      `    After: ${a.toISOString()}`,
+      `    After: ${timestampToDate(after).toISOString()}`,
     );
     console.log(`Drand publication (Round ${round})`);
     console.log(

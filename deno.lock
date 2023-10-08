@@ -1,28 +1,24 @@
 {
-  "version": "2",
-  "remote": {
-    "https://deno.land/std@0.171.0/_util/asserts.ts": "178dfc49a464aee693a7e285567b3d0b555dc805ff490505a8aae34f9cfb1462",
-    "https://deno.land/std@0.171.0/flags/mod.ts": "d1cdefa18472ef69858a17df5cf7c98445ed27ac10e1460183081303b0ebc270"
-  },
-  "npm": {
+  "version": "3",
+  "packages": {
     "specifiers": {
-      "@cosmjs/cosmwasm-stargate": "@cosmjs/cosmwasm-stargate@0.31.0",
-      "@cosmjs/cosmwasm-stargate@^0.31.0": "@cosmjs/cosmwasm-stargate@0.31.0",
-      "@cosmjs/crypto": "@cosmjs/crypto@0.31.0",
-      "@cosmjs/crypto@^0.31.0": "@cosmjs/crypto@0.31.0",
-      "@cosmjs/encoding": "@cosmjs/encoding@0.31.0",
-      "@cosmjs/encoding@^0.31.0": "@cosmjs/encoding@0.31.0",
-      "@cosmjs/math": "@cosmjs/math@0.31.0",
-      "@cosmjs/proto-signing": "@cosmjs/proto-signing@0.31.0",
-      "@cosmjs/stargate": "@cosmjs/stargate@0.31.0",
-      "@cosmjs/tendermint-rpc": "@cosmjs/tendermint-rpc@0.31.0",
-      "@cosmjs/tendermint-rpc@^0.31.0": "@cosmjs/tendermint-rpc@0.31.0",
-      "@cosmjs/utils": "@cosmjs/utils@0.31.0",
-      "@cosmjs/utils@^0.31.0": "@cosmjs/utils@0.31.0",
-      "express@4.18.2": "express@4.18.2",
-      "prom-client": "prom-client@14.2.0"
+      "npm:@cosmjs/cosmwasm-stargate": "npm:@cosmjs/cosmwasm-stargate@0.31.0",
+      "npm:@cosmjs/cosmwasm-stargate@^0.31.0": "npm:@cosmjs/cosmwasm-stargate@0.31.0",
+      "npm:@cosmjs/crypto": "npm:@cosmjs/crypto@0.31.0",
+      "npm:@cosmjs/crypto@^0.31.0": "npm:@cosmjs/crypto@0.31.0",
+      "npm:@cosmjs/encoding": "npm:@cosmjs/encoding@0.31.0",
+      "npm:@cosmjs/encoding@^0.31.0": "npm:@cosmjs/encoding@0.31.0",
+      "npm:@cosmjs/math": "npm:@cosmjs/math@0.31.0",
+      "npm:@cosmjs/proto-signing": "npm:@cosmjs/proto-signing@0.31.0",
+      "npm:@cosmjs/stargate": "npm:@cosmjs/stargate@0.31.0",
+      "npm:@cosmjs/tendermint-rpc": "npm:@cosmjs/tendermint-rpc@0.31.0",
+      "npm:@cosmjs/tendermint-rpc@^0.31.0": "npm:@cosmjs/tendermint-rpc@0.31.0",
+      "npm:@cosmjs/utils": "npm:@cosmjs/utils@0.31.0",
+      "npm:@cosmjs/utils@^0.31.0": "npm:@cosmjs/utils@0.31.0",
+      "npm:express@4.18.2": "npm:express@4.18.2",
+      "npm:prom-client": "npm:prom-client@14.2.0"
     },
-    "packages": {
+    "npm": {
       "@confio/ics23@0.6.8": {
         "integrity": "sha512-wB6uo+3A50m0sW/EWcU64xpV/8wShZ6bMTa7pF8eYsTrSkQA7oLUIJcs/wb8g4y2Oyq701BaGiO6n/ak5WXO1w==",
         "dependencies": {
@@ -729,5 +725,13 @@
         }
       }
     }
+  },
+  "remote": {
+    "https://deno.land/std@0.171.0/_util/asserts.ts": "178dfc49a464aee693a7e285567b3d0b555dc805ff490505a8aae34f9cfb1462",
+    "https://deno.land/std@0.171.0/flags/mod.ts": "d1cdefa18472ef69858a17df5cf7c98445ed27ac10e1460183081303b0ebc270",
+    "https://deno.land/std@0.177.0/fmt/colors.ts": "938c5d44d889fb82eff6c358bea8baa7e85950a16c9f6dae3ec3a7a729164471",
+    "https://deno.land/std@0.177.0/testing/_diff.ts": "1a3c044aedf77647d6cac86b798c6417603361b66b54c53331b312caeb447aea",
+    "https://deno.land/std@0.177.0/testing/_format.ts": "a69126e8a469009adf4cf2a50af889aca364c349797e63174884a52ff75cf4c7",
+    "https://deno.land/std@0.177.0/testing/asserts.ts": "984ab0bfb3faeed92ffaa3a6b06536c66811185328c5dd146257c702c41b01ab"
   }
 }
